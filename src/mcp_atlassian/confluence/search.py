@@ -68,7 +68,6 @@ class SearchMixin(ConfluenceClient):
             results,
             base_url=self.config.url,
             cql_query=cql,
-            is_cloud=self.config.is_cloud,
         )
 
         # 将结果摘要处理为内容

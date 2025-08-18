@@ -36,7 +36,7 @@ def _create_user_config_for_fetcher(
         base_config: 要克隆和修改的基础ConfluenceConfig。
         auth_type: 身份验证类型（'basic'或'pat'）。
         credentials: 凭据字典（token、email等）。
-        cloud_id: 可选的云ID（basic/PAT身份验证不使用）。
+        cloud_id: 已弃用，保留仅用于向后兼容。
 
     Returns:
         具有用户特定凭据的ConfluenceConfig。
@@ -71,12 +71,6 @@ def _create_user_config_for_fetcher(
         if not user_pat:
             raise ValueError("用户auth_type'pat'的凭据中缺少PAT")
 
-        # 如果使用PAT身份验证提供了cloud_id，记录警告（通常不需要）
-        if cloud_id:
-            logger.warning(
-                f"使用PAT身份验证提供了云ID'{cloud_id}'。"
-                "PAT身份验证通常直接使用基础URL，不需要cloud_id覆盖。"
-            )
 
         common_args.update(
             {
@@ -147,7 +141,6 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
         ):
             user_token = getattr(request.state, "user_atlassian_token", None)
             user_email = getattr(request.state, "user_atlassian_email", None)
-            user_cloud_id = getattr(request.state, "user_atlassian_cloud_id", None)
 
             if not user_token:
                 raise ValueError("在状态中找到用户Atlassian令牌但为空。")
@@ -168,15 +161,14 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
                     "Confluence全局配置（URL、SSL）无法从生命周期上下文中获取。"
                 )
 
-            cloud_id_info = f" 带有cloudId {user_cloud_id}" if user_cloud_id else ""
             logger.info(
-                f"为用户{user_email or 'unknown'}创建用户特定的ConfluenceFetcher（类型: {user_auth_type}）（令牌...{str(user_token)[-8:]}）{cloud_id_info}"
+                f"为用户{user_email or 'unknown'}创建用户特定的ConfluenceFetcher（类型: {user_auth_type}）（令牌...{str(user_token)[-8:]}）"
             )
             user_specific_config = _create_user_config_for_fetcher(
                 base_config=app_lifespan_ctx.full_confluence_config,
                 auth_type=user_auth_type,
                 credentials=credentials,
-                cloud_id=user_cloud_id,
+                cloud_id=None,
             )
             try:
                 user_confluence_fetcher = ConfluenceFetcher(config=user_specific_config)

@@ -122,7 +122,7 @@ class ConfluencePage(ApiModel, TimestampMixin):
                 include_body: Whether to include body content
                 content_override: Override the content value
                 content_format: Override the content format
-                is_cloud: Whether this is a cloud instance (affects URL format)
+                url_format: URL format for the instance
 
         Returns:
             A ConfluencePage instance
@@ -201,15 +201,8 @@ class ConfluencePage(ApiModel, TimestampMixin):
         if base_url := kwargs.get("base_url"):
             page_id = data.get("id")
 
-            # Use different URL format based on whether it's cloud or server
-            is_cloud = kwargs.get("is_cloud", False)
-            if is_cloud:
-                # Cloud format: {base_url}/spaces/{space_key}/pages/{page_id}
-                space_key = space.key if space and space.key else "unknown"
-                url = f"{base_url}/spaces/{space_key}/pages/{page_id}"
-            else:
-                # Server format: {base_url}/pages/viewpage.action?pageId={page_id}
-                url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
+            # Use Server/Data Center URL format
+            url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
 
         return cls(
             id=str(data.get("id", CONFLUENCE_DEFAULT_ID)),

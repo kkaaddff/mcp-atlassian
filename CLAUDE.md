@@ -15,6 +15,9 @@ pre-commit install
 
 # Copy environment template
 cp .env.example .env
+
+# activate Python env before run python
+conda activate mcp-atlassian
 ```
 
 ### Testing
@@ -54,8 +57,6 @@ mcp-confluence --transport sse --port 9000
 # Run with verbose logging
 mcp-confluence -vv
 
-# Run OAuth setup wizard
-mcp-confluence --oauth-setup
 
 # Run as HTTP service
 mcp-confluence --http-service --host 0.0.0.0 --port 8000
@@ -87,7 +88,6 @@ This is a Model Context Protocol (MCP) server that provides integration with Con
    - REST API for Confluence operations
 
 5. **Authentication Support**:
-   - **Cloud**: API Token, OAuth 2.0, Personal Access Token
    - **Server/Data Center**: Personal Access Token, Basic Auth
    - Multi-user authentication with token extraction from HTTP headers
    - Request-based authentication for HTTP service mode
@@ -115,19 +115,8 @@ Key configuration variables (see `.env.example` for complete list):
 # Service URLs
 CONFLUENCE_URL=https://your-company.atlassian.net/wiki
 
-# Authentication (Cloud)
-CONFLUENCE_USERNAME=your.email@company.com
-CONFLUENCE_API_TOKEN=your_token
-
 # Authentication (Server/Data Center)
 CONFLUENCE_PERSONAL_TOKEN=your_pat
-
-# OAuth 2.0 (Cloud)
-CONFLUENCE_OAUTH_CLIENT_ID=your_client_id
-CONFLUENCE_OAUTH_CLIENT_SECRET=your_client_secret
-CONFLUENCE_OAUTH_REDIRECT_URI=http://localhost:8080/callback
-CONFLUENCE_OAUTH_SCOPE=read:confluence-content.all write:confluence-content offline_access
-CONFLUENCE_OAUTH_CLOUD_ID=your_cloud_id
 
 # Feature Controls
 READ_ONLY_MODE=false
@@ -140,15 +129,6 @@ MCP_VERY_VERBOSE=true
 MCP_LOGGING_STDOUT=true
 ```
 
-### Multi-Cloud OAuth Support
-
-The server supports multi-tenant scenarios where users provide their own OAuth tokens:
-
-1. **Minimal Configuration**: Set `CONFLUENCE_OAUTH_ENABLE=true`
-2. **User Authentication**: Users provide tokens via HTTP headers:
-   - `Authorization: Bearer <user_oauth_token>`
-   - `X-Atlassian-Cloud-Id: <user_cloud_id>`
-3. **Token Isolation**: Each request uses user-specific tokens with no cross-tenant leakage
 
 ### Development Notes
 

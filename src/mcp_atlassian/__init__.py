@@ -118,7 +118,7 @@ def main(
 
     Supports Confluence Server/Data Center deployments.
     Authentication methods supported:
-    - Username and API token (Cloud)
+    - Username and API token (Server/Data Center)
     - Personal Access Token (Server/Data Center)
     """
     # Logging level logic

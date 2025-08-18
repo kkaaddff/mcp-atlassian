@@ -6,7 +6,7 @@
 [![Run Tests](https://github.com/sooperset/mcp-confluence/actions/workflows/tests.yml/badge.svg)](https://github.com/sooperset/mcp-confluence/actions/workflows/tests.yml)
 ![License](https://img.shields.io/github/license/sooperset/mcp-confluence)
 
-Confluence 的模型上下文协议 (MCP) 服务器。此集成支持 Confluence Cloud 和 Server/Data Center 部署。
+Confluence 的模型上下文协议 (MCP) 服务器。此集成支持 Confluence Server/Data Center 部署。
 
 ## 使用示例
 
@@ -25,22 +25,15 @@ https://github.com/user-attachments/assets/7fe9c488-ad0c-4876-9b54-120b666bb785
 
 | 产品 | 部署类型 | 支持状态 |
 |------|----------|----------|
-| **Confluence** | Cloud | ✅ 完全支持 |
 | **Confluence** | Server/Data Center | ✅ 支持（版本 6.0+） |
 
 ## 快速开始指南
 
 ### 🔐 1. 身份验证设置
 
-MCP Confluence 支持两种身份验证方法：
+MCP Confluence 支持以下身份验证方法：
 
-#### A. API 令牌身份验证（Cloud）- **推荐**
-
-1. 访问 https://id.atlassian.com/manage-profile/security/api-tokens
-2. 点击 **创建 API 令牌**，为其命名
-3. 立即复制令牌
-
-#### B. 个人访问令牌（Server/Data Center）
+#### 个人访问令牌（Server/Data Center）
 
 1. 访问您的个人资料（头像）→ **个人资料** → **个人访问令牌**
 2. 点击 **创建令牌**，命名，设置过期时间
@@ -51,12 +44,7 @@ MCP Confluence 支持两种身份验证方法：
 在项目根目录创建 `.env` 文件：
 
 ```bash
-# 对于 Confluence Cloud（API 令牌）
-CONFLUENCE_URL=https://your-company.atlassian.net/wiki
-CONFLUENCE_USERNAME=your.email@company.com
-CONFLUENCE_API_TOKEN=your_api_token_here
-
-# 对于 Confluence Server/Data Center（个人访问令牌）
+# Confluence Server/Data Center（个人访问令牌）
 CONFLUENCE_URL=https://confluence.your-company.com
 CONFLUENCE_PERSONAL_TOKEN=your_personal_access_token_here
 
@@ -93,11 +81,11 @@ HTTP 服务接受对 `/confluence/execute` 的 POST 请求，具有以下结构�
 
 ```json
 {
-  "base_url": "https://your-company.atlassian.net/wiki",
+  "base_url": "https://confluence.your-company.com",
   "auth_type": "basic|pat",
-  "username": "your.email@company.com",  # 基础认证用
-  "api_token": "your_api_token",        # 基础认证用
-  "personal_token": "your_pat",          # PAT 认证用
+  "username": "your.username",        # 基础认证用
+  "api_token": "your_api_token",      # 基础认证用
+  "personal_token": "your_pat",        # PAT 认证用
   "operation": "get_page|search_pages|get_space|list_spaces|create_page|update_page",
   "parameters": {
     "page_id": "12345",
@@ -118,9 +106,9 @@ HTTP 服务接受对 `/confluence/execute` 的 POST 请求，具有以下结构�
 | 变量 | 描述 | 必需 |
 |------|------|------|
 | `CONFLUENCE_URL` | Confluence 实例的基础 URL | ✅ |
-| `CONFLUENCE_USERNAME` | Cloud 身份验证的邮箱/用户名 | ✅ (Cloud) |
-| `CONFLUENCE_API_TOKEN` | Cloud 身份验证的 API 令牌 | ✅ (Cloud) |
-| `CONFLUENCE_PERSONAL_TOKEN` | Server/DC 的个人访问令牌 | ✅ (Server/DC) |
+| `CONFLUENCE_PERSONAL_TOKEN` | Server/Data Center 的个人访问令牌 | ✅ |
+| `CONFLUENCE_USERNAME` | 基础认证的用户名 | ❌ |
+| `CONFLUENCE_API_TOKEN` | 基础认证的 API 令牌 | ❌ |
 | `CONFLUENCE_SPACES_FILTER` | 用于过滤的逗号分隔空间键 | ❌ |
 | `CONFLUENCE_SSL_VERIFY` | 验证 SSL 证书（true/false） | ❌ |
 
@@ -225,7 +213,7 @@ uv run mypy .
 ### 常见问题
 
 1. **身份验证失败**
-   - 验证您的 API 令牌是否有效且未过期
+   - 验证您的个人访问令牌是否有效且未过期
    - 检查您的 Confluence URL 是否正确
    - 确保您的用户/令牌具有适当的权限
 

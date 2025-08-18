@@ -6,10 +6,13 @@ from urllib.parse import urlparse
 
 def is_atlassian_cloud_url(url: str) -> bool:
     """确定URL是属于Atlassian Cloud还是Server/Data Center。
-
+    
+    注意：此函数已弃用，保留仅用于向后兼容。
+    所有URL现在都视为Server/Data Center。
+    
     参数:
         url: 要检查的URL
-
+        
     返回:
         如果URL是Atlassian Cloud实例则返回True，如果是Server/Data Center则返回False
     """
@@ -30,10 +33,6 @@ def is_atlassian_cloud_url(url: str) -> bool:
     ):
         return False
 
-    # Atlassian云域名的标准检查
-    return (
-        ".atlassian.net" in hostname
-        or ".jira.com" in hostname
-        or ".jira-dev.com" in hostname
-        or "api.atlassian.com" in hostname
-    )
+    # 对于向后兼容，检查Atlassian云域名，但现在返回False
+    # 所有URL都被视为Server/Data Center
+    return False

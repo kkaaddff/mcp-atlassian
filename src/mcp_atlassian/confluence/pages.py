@@ -59,8 +59,7 @@ class PagesMixin(ConfluenceClient):
                 # 使用我们的处理版本覆盖内容
                 content_override=page_content,
                 content_format="storage" if not convert_to_markdown else "markdown",
-                is_cloud=self.config.is_cloud,
-            )
+                            )
         except HTTPError as http_err:
             if http_err.response is not None and http_err.response.status_code in [
                 401,
@@ -176,8 +175,7 @@ class PagesMixin(ConfluenceClient):
                 # 使用我们的处理版本覆盖内容
                 content_override=page_content,
                 content_format="storage" if not convert_to_markdown else "markdown",
-                is_cloud=self.config.is_cloud,
-            )
+                            )
         except HTTPError as http_err:
             if http_err.response is not None and http_err.response.status_code in [
                 401,

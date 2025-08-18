@@ -14,13 +14,11 @@ from .lifecycle import (
 from .logging import setup_logging
 
 from .ssl import SSLIgnoreAdapter, configure_ssl_verification
-from .urls import is_atlassian_cloud_url
 
 # 为向后兼容导出所有实用函数
 __all__ = [
     "SSLIgnoreAdapter",
     "configure_ssl_verification",
-    "is_atlassian_cloud_url",
     "is_read_only_mode",
     "setup_logging",
     "parse_date",

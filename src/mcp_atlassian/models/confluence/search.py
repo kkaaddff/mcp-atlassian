@@ -39,7 +39,7 @@ class ConfluenceSearchResult(ApiModel, TimestampMixin):
             data: The search result data from the Confluence API
             **kwargs: Additional context parameters, including:
                 - base_url: Base URL for constructing page URLs
-                - is_cloud: Whether this is a cloud instance (affects URL format)
+                - url_format: URL format for the instance
 
         Returns:
             A ConfluenceSearchResult instance

@@ -32,7 +32,7 @@ def test_from_env_missing_url():
     try:
         os.environ.clear()
         with pytest.raises(
-            ValueError, match="Missing required CONFLUENCE_URL environment variable"
+            ValueError, match="缺少必需的CONFLUENCE_URL环境变量"
         ):
             ConfluenceConfig.from_env()
     finally:
@@ -41,20 +41,6 @@ def test_from_env_missing_url():
         os.environ.update(original_env)
 
 
-def test_from_env_missing_cloud_auth():
-    """Test that from_env raises ValueError when cloud auth credentials are missing."""
-    with patch.dict(
-        os.environ,
-        {
-            "CONFLUENCE_URL": "https://test.atlassian.net",  # Cloud URL
-        },
-        clear=True,
-    ):
-        with pytest.raises(
-            ValueError,
-            match="Cloud authentication requires CONFLUENCE_USERNAME and CONFLUENCE_API_TOKEN",
-        ):
-            ConfluenceConfig.from_env()
 
 
 def test_from_env_missing_server_auth():
@@ -68,53 +54,11 @@ def test_from_env_missing_server_auth():
     ):
         with pytest.raises(
             ValueError,
-            match="Server/Data Center authentication requires CONFLUENCE_PERSONAL_TOKEN",
+            match="Server/Data Center身份验证需要CONFLUENCE_PERSONAL_TOKEN或CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN",
         ):
             ConfluenceConfig.from_env()
 
 
-def test_is_cloud():
-    """Test that is_cloud property returns correct value."""
-    # Arrange & Act - Cloud URL
-    config = ConfluenceConfig(
-        url="https://example.atlassian.net/wiki",
-        auth_type="basic",
-        username="test",
-        api_token="test",
-    )
-
-    # Assert
-    assert config.is_cloud is True
-
-    # Arrange & Act - Server URL
-    config = ConfluenceConfig(
-        url="https://confluence.example.com",
-        auth_type="pat",
-        personal_token="test",
-    )
-
-    # Assert
-    assert config.is_cloud is False
-
-    # Arrange & Act - Localhost URL (Data Center/Server)
-    config = ConfluenceConfig(
-        url="http://localhost:8090",
-        auth_type="pat",
-        personal_token="test",
-    )
-
-    # Assert
-    assert config.is_cloud is False
-
-    # Arrange & Act - IP localhost URL (Data Center/Server)
-    config = ConfluenceConfig(
-        url="http://127.0.0.1:8090",
-        auth_type="pat",
-        personal_token="test",
-    )
-
-    # Assert
-    assert config.is_cloud is False
 
 
 def test_from_env_proxy_settings():

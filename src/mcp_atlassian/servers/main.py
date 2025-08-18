@@ -216,7 +216,6 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
         )
         if request_path == mcp_path and request.method == "POST":
             auth_header = request.headers.get("Authorization")
-            cloud_id_header = request.headers.get("X-Atlassian-Cloud-Id")
 
             token_for_log = mask_sensitive(
                 auth_header.split(" ", 1)[1].strip()
@@ -224,20 +223,8 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                 else auth_header
             )
             logger.debug(
-                f"UserTokenMiddleware: Path='{request.url.path}', AuthHeader='{mask_sensitive(auth_header)}', ParsedToken(masked)='{token_for_log}', CloudId='{cloud_id_header}'"
+                f"UserTokenMiddleware: Path='{request.url.path}', AuthHeader='{mask_sensitive(auth_header)}', ParsedToken(masked)='{token_for_log}'"
             )
-
-            # 提取并保存cloudId（如果提供）
-            if cloud_id_header and cloud_id_header.strip():
-                request.state.user_atlassian_cloud_id = cloud_id_header.strip()
-                logger.debug(
-                    f"UserTokenMiddleware: 从头中提取cloudId: {cloud_id_header.strip()}"
-                )
-            else:
-                request.state.user_atlassian_cloud_id = None
-                logger.debug(
-                    "UserTokenMiddleware: 未提供cloudId头，将使用全局配置"
-                )
 
             # 检查mcp-session-id头用于调试
             mcp_session_id = request.headers.get("mcp-session-id")

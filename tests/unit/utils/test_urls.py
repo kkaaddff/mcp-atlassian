@@ -9,40 +9,22 @@ def test_is_atlassian_cloud_url_empty():
     assert is_atlassian_cloud_url(None) is False
 
 
-def test_is_atlassian_cloud_url_cloud():
-    """Test that is_atlassian_cloud_url returns True for Atlassian Cloud URLs."""
-    # Test standard Atlassian Cloud URLs
-    assert is_atlassian_cloud_url("https://example.atlassian.net") is True
-    assert is_atlassian_cloud_url("https://company.atlassian.net/wiki") is True
-    assert is_atlassian_cloud_url("https://subdomain.atlassian.net/jira") is True
-    assert is_atlassian_cloud_url("http://other.atlassian.net") is True
-
-    # Test Jira Cloud specific domains
-    assert is_atlassian_cloud_url("https://company.jira.com") is True
-    assert is_atlassian_cloud_url("https://team.jira-dev.com") is True
 
 
-def test_is_atlassian_cloud_url_api_atlassian_urls():
-    """Test that is_atlassian_cloud_url returns True for api.atlassian.com URLs."""
-    # Test api.atlassian.com URLs used by API access
-    assert (
-        is_atlassian_cloud_url("https://api.atlassian.com/ex/jira/abc123/rest/api/2/")
-        is True
-    )
-    assert (
-        is_atlassian_cloud_url("https://api.atlassian.com/ex/confluence/xyz789/")
-        is True
-    )
-    assert is_atlassian_cloud_url("http://api.atlassian.com/ex/jira/test/") is True
-    assert is_atlassian_cloud_url("https://api.atlassian.com") is True
 
 
 def test_is_atlassian_cloud_url_server():
-    """Test that is_atlassian_cloud_url returns False for Atlassian Server/Data Center URLs."""
+    """Test that is_atlassian_cloud_url returns False for all URLs (now all treated as Server/Data Center)."""
     # Test with various server/data center domains
     assert is_atlassian_cloud_url("https://jira.example.com") is False
     assert is_atlassian_cloud_url("https://confluence.company.org") is False
     assert is_atlassian_cloud_url("https://jira.internal") is False
+    
+    # Test with Atlassian Cloud URLs (should now return False)
+    assert is_atlassian_cloud_url("https://example.atlassian.net") is False
+    assert is_atlassian_cloud_url("https://company.atlassian.net/wiki") is False
+    assert is_atlassian_cloud_url("https://subdomain.atlassian.net/jira") is False
+    assert is_atlassian_cloud_url("https://api.atlassian.com") is False
 
 
 def test_is_atlassian_cloud_url_localhost():
@@ -66,9 +48,9 @@ def test_is_atlassian_cloud_url_ip_addresses():
 
 def test_is_atlassian_cloud_url_with_protocols():
     """Test that is_atlassian_cloud_url works with different protocols."""
-    # Test with different protocols
-    assert is_atlassian_cloud_url("https://example.atlassian.net") is True
-    assert is_atlassian_cloud_url("http://example.atlassian.net") is True
+    # Test with different protocols (all now return False after Cloud support removal)
+    assert is_atlassian_cloud_url("https://example.atlassian.net") is False
+    assert is_atlassian_cloud_url("http://example.atlassian.net") is False
     assert (
-        is_atlassian_cloud_url("ftp://example.atlassian.net") is True
+        is_atlassian_cloud_url("ftp://example.atlassian.net") is False
     )  # URL parsing still works

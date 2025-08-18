@@ -6,15 +6,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ..utils.env import get_custom_headers, is_env_ssl_verify
-from ..utils.urls import is_atlassian_cloud_url
 
 
 @dataclass
 class ConfluenceConfig:
     """Confluence API配置。
 
-    处理Confluence Cloud和Server/Data Center的身份验证：
-    - Cloud：用户名/API令牌（基本身份验证）
+    处理Confluence Server/Data Center的身份验证：
     - Server/DC：个人访问令牌或基本身份验证
     """
 
@@ -31,15 +29,6 @@ class ConfluenceConfig:
     socks_proxy: str | None = None  # SOCKS代理URL（可选）
     custom_headers: dict[str, str] | None = None  # 自定义HTTP头
 
-    @property
-    def is_cloud(self) -> bool:
-        """检查这是否是云实例。
-
-        Returns:
-            如果是云实例（atlassian.net）则为True，否则为False。
-            本地URL总是被视为非云（Server/Data Center）。
-        """
-        return is_atlassian_cloud_url(self.url) if self.url else False
 
     @property
     def verify_ssl(self) -> bool:
@@ -70,25 +59,16 @@ class ConfluenceConfig:
         api_token = os.getenv("CONFLUENCE_API_TOKEN")
         personal_token = os.getenv("CONFLUENCE_PERSONAL_TOKEN")
 
-        # 直接使用共享实用工具函数
-        is_cloud = is_atlassian_cloud_url(url)
         auth_type = None
 
-        if is_cloud:
-            if username and api_token:
-                auth_type = "basic"
-            else:
-                error_msg = "Cloud身份验证需要CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN"
-                raise ValueError(error_msg)
-        else:  # Server/Data Center
-            if personal_token:
-                auth_type = "pat"
-            elif username and api_token:
-                # 也允许Server/DC使用基本身份验证
-                auth_type = "basic"
-            else:
-                error_msg = "Server/Data Center身份验证需要CONFLUENCE_PERSONAL_TOKEN或CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN"
-                raise ValueError(error_msg)
+        if personal_token:
+            auth_type = "pat"
+        elif username and api_token:
+            # 基本身份验证
+            auth_type = "basic"
+        else:
+            error_msg = "Server/Data Center身份验证需要CONFLUENCE_PERSONAL_TOKEN或CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN"
+            raise ValueError(error_msg)
 
         # SSL验证（用于Server/DC）
         ssl_verify = is_env_ssl_verify("CONFLUENCE_SSL_VERIFY")

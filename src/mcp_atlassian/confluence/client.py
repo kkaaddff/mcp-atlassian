@@ -39,7 +39,6 @@ class ConfluenceClient:
             self.confluence = Confluence(
                 url=self.config.url,
                 token=self.config.personal_token,
-                cloud=self.config.is_cloud,
                 verify_ssl=self.config.ssl_verify,
             )
         else:  # 基本身份验证
@@ -47,13 +46,12 @@ class ConfluenceClient:
                 f"使用基本身份验证初始化Confluence客户端。"
                 f"URL: {self.config.url}, 用户名: {self.config.username}, "
                 f"API令牌存在: {bool(self.config.api_token)}, "
-                f"是否为云: {self.config.is_cloud}"
+                "使用Server/Data Center身份验证"
             )
             self.confluence = Confluence(
                 url=self.config.url,
                 username=self.config.username,
                 password=self.config.api_token,  # API令牌用作密码
-                cloud=self.config.is_cloud,
                 verify_ssl=self.config.ssl_verify,
             )
             logger.debug(

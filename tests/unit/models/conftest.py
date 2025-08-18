@@ -19,16 +19,10 @@ from tests.fixtures.confluence_mocks import (
     MOCK_PAGE_RESPONSE,
 )
 
-# Import mock data
-from tests.fixtures.jira_mocks import (
-    MOCK_JIRA_COMMENTS,
-    MOCK_JIRA_ISSUE_RESPONSE,
-    MOCK_JIRA_JQL_RESPONSE,
-)
+# Jira mock data removed - Jira support no longer available
 from tests.utils.factories import (
     ConfluencePageFactory,
     ErrorResponseFactory,
-    JiraIssueFactory,
 )
 
 # ============================================================================

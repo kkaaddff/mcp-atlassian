@@ -11,7 +11,6 @@ from tests.utils.factories import (
     AuthConfigFactory,
     ConfluencePageFactory,
     ErrorResponseFactory,
-    JiraIssueFactory,
 )
 from tests.utils.mocks import MockAtlassianClient, MockEnvironment
 
@@ -45,13 +44,8 @@ def session_auth_configs():
     return {
         "basic_auth": AuthConfigFactory.create_basic_auth_config(),
         "pat_auth": AuthConfigFactory.create_pat_auth_config(),
-        "jira_basic": {
-            "url": "https://test.atlassian.net",
-            "username": "test@example.com",
-            "api_token": "test-jira-token",
-        },
         "confluence_basic": {
-            "url": "https://test.atlassian.net/wiki",
+            "url": "https://confluence.example.com/wiki",
             "username": "test@example.com",
             "api_token": "test-confluence-token",
         },
@@ -70,21 +64,9 @@ def session_mock_data():
         Dict[str, Any]: 各种 API 响应的模拟数据模板
     """
     return {
-        "jira_issue": JiraIssueFactory.create(),
-        "jira_issue_minimal": JiraIssueFactory.create_minimal(),
         "confluence_page": ConfluencePageFactory.create(),
         "api_error": ErrorResponseFactory.create_api_error(),
         "auth_error": ErrorResponseFactory.create_auth_error(),
-        "jira_search_results": {
-            "issues": [
-                JiraIssueFactory.create("TEST-1"),
-                JiraIssueFactory.create("TEST-2"),
-                JiraIssueFactory.create("TEST-3"),
-            ],
-            "total": 3,
-            "startAt": 0,
-            "maxResults": 50,
-        },
     }
 
 
@@ -129,23 +111,6 @@ def basic_auth_environment():
 # ============================================================================
 # 基于 Factory 的 Fixture
 # ============================================================================
-
-
-@pytest.fixture
-def make_jira_issue():
-    """
-    用于创建具有可自定义属性的 Jira 问题的 factory fixture。
-
-    返回：
-        Callable: 创建 Jira 问题数据的 factory 函数
-
-    示例：
-        def test_issue_creation(make_jira_issue):
-            issue = make_jira_issue(key="CUSTOM-123",
-                                  fields={"priority": {"name": "High"}})
-            assert issue["key"] == "CUSTOM-123"
-    """
-    return JiraIssueFactory.create
 
 
 @pytest.fixture
@@ -206,19 +171,6 @@ def make_api_error():
 
 
 @pytest.fixture
-def mock_jira_client():
-    """
-    提供预配置模拟 Jira 客户端的 fixture。
-
-    该客户端具有常见操作的合理默认值，但可以根据每个测试的需要进行自定义。
-
-    返回：
-        MagicMock: 配置的模拟 Jira 客户端
-    """
-    return MockAtlassianClient.create_jira_client()
-
-
-@pytest.fixture
 def mock_confluence_client():
     """
     提供预配置模拟 Confluence 客户端的 fixture。
@@ -234,18 +186,6 @@ def mock_confluence_client():
 # ============================================================================
 # 兼容性 Fixture（保持向后兼容）
 # ============================================================================
-
-
-@pytest.fixture
-def use_real_jira_data(request):
-    """
-    检查是否应该运行真实 Jira 数据测试。
-
-    如果 --use-real-data 标志传递给 pytest，这将返回 True。
-
-    注意：此 fixture 为向后兼容而维护。
-    """
-    return request.config.getoption("--use-real-data")
 
 
 @pytest.fixture
@@ -331,7 +271,6 @@ def validate_test_environment():
         # 检查模块是否可以导入
         for module_name in [
             "tests.fixtures.confluence_mocks",
-            "tests.fixtures.jira_mocks",
             "tests.utils.base",
             "tests.utils.factories",
             "tests.utils.mocks",
