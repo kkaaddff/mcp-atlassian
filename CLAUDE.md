@@ -7,14 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Environment Setup
 ```bash
 # Install dependencies
-uv sync
-uv sync --frozen --all-extras --dev
-
-# Activate virtual environment
-# macOS/Linux:
-source .venv/bin/activate
-# Windows:
-.venv\Scripts\activate.ps1
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Set up pre-commit hooks
 pre-commit install
@@ -26,16 +20,16 @@ cp .env.example .env
 ### Testing
 ```bash
 # Run all tests
-uv run pytest
+pytest
 
 # Run with coverage
-uv run pytest --cov=mcp_atlassian
+pytest --cov=mcp_atlassian
 
 # Run specific test file
-uv run pytest tests/unit/confluence/test_client.py
+pytest tests/unit/confluence/test_client.py
 
 # Run with verbose output
-uv run pytest -v
+pytest -v
 ```
 
 ### Code Quality
@@ -44,27 +38,27 @@ uv run pytest -v
 pre-commit run --all-files
 
 # Run specific tools
-uv run ruff check .
-uv run ruff format .
-uv run mypy .
+ruff check .
+ruff format .
+mypy .
 ```
 
 ### Running the Server
 ```bash
 # Run with stdio transport (default)
-uv run mcp-confluence
+mcp-confluence
 
 # Run with HTTP transport
-uv run mcp-confluence --transport sse --port 9000
+mcp-confluence --transport sse --port 9000
 
 # Run with verbose logging
-uv run mcp-confluence -vv
+mcp-confluence -vv
 
 # Run OAuth setup wizard
-uv run mcp-confluence --oauth-setup
+mcp-confluence --oauth-setup
 
 # Run as HTTP service
-uv run mcp-confluence --http-service --host 0.0.0.0 --port 8000
+mcp-confluence --http-service --host 0.0.0.0 --port 8000
 ```
 
 ## Architecture Overview
@@ -158,7 +152,7 @@ The server supports multi-tenant scenarios where users provide their own OAuth t
 
 ### Development Notes
 
-- Use `uv` for dependency management (not pip)
+- Use `pip` for dependency management (not uv)
 - Pre-commit hooks enforce code quality (ruff, mypy, formatting)
 - Type hints are required with modern Python syntax (`str | None`)
 - Use Google-style docstrings for public APIs
