@@ -1,4 +1,4 @@
-"""MCP Atlassian Servers Package."""
+"""MCP Confluence Servers Package."""
 
 from .main import main_mcp
 

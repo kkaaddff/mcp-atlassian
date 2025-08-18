@@ -77,7 +77,7 @@ class ConfluenceConfig:
             ValueError: If any required environment variable is missing
         """
         url = os.getenv("CONFLUENCE_URL")
-        if not url and not os.getenv("ATLASSIAN_OAUTH_ENABLE"):
+        if not url and not os.getenv("CONFLUENCE_OAUTH_ENABLE"):
             error_msg = "Missing required CONFLUENCE_URL environment variable"
             raise ValueError(error_msg)
 
@@ -149,7 +149,7 @@ class ConfluenceConfig:
         Returns:
             bool: True if authentication is fully configured, False otherwise.
         """
-        logger = logging.getLogger("mcp-atlassian.confluence.config")
+        logger = logging.getLogger("mcp-confluence.confluence.config")
         if self.auth_type == "oauth":
             # Handle different OAuth configuration types
             if self.oauth_config:

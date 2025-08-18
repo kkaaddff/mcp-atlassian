@@ -1,6 +1,6 @@
-"""OAuth 2.0 utilities for Atlassian Cloud authentication.
+"""OAuth 2.0 utilities for Confluence Cloud authentication.
 
-This module provides utilities for OAuth 2.0 (3LO) authentication with Atlassian Cloud.
+This module provides utilities for OAuth 2.0 (3LO) authentication with Confluence Cloud.
 It handles:
 - OAuth configuration
 - Token acquisition, storage, and refresh
@@ -21,7 +21,7 @@ import keyring
 import requests
 
 # Configure logging
-logger = logging.getLogger("mcp-atlassian.oauth")
+logger = logging.getLogger("mcp-confluence.oauth")
 
 # Constants
 TOKEN_URL = "https://auth.atlassian.com/oauth/token"  # noqa: S105 - This is a public API endpoint URL, not a password
@@ -386,17 +386,17 @@ class OAuthConfig:
             OAuthConfig instance or None if OAuth is not enabled
         """
         # Check if OAuth is explicitly enabled (allows minimal config)
-        oauth_enabled = os.getenv("ATLASSIAN_OAUTH_ENABLE", "").lower() in (
+        oauth_enabled = os.getenv("CONFLUENCE_OAUTH_ENABLE", "").lower() in (
             "true",
             "1",
             "yes",
         )
 
         # Check for required environment variables
-        client_id = os.getenv("ATLASSIAN_OAUTH_CLIENT_ID")
-        client_secret = os.getenv("ATLASSIAN_OAUTH_CLIENT_SECRET")
-        redirect_uri = os.getenv("ATLASSIAN_OAUTH_REDIRECT_URI")
-        scope = os.getenv("ATLASSIAN_OAUTH_SCOPE")
+        client_id = os.getenv("CONFLUENCE_OAUTH_CLIENT_ID")
+        client_secret = os.getenv("CONFLUENCE_OAUTH_CLIENT_SECRET")
+        redirect_uri = os.getenv("CONFLUENCE_OAUTH_REDIRECT_URI")
+        scope = os.getenv("CONFLUENCE_OAUTH_SCOPE")
 
         # Full OAuth configuration (traditional mode)
         if all([client_id, client_secret, redirect_uri, scope]):
@@ -406,7 +406,7 @@ class OAuthConfig:
                 client_secret=client_secret,
                 redirect_uri=redirect_uri,
                 scope=scope,
-                cloud_id=os.getenv("ATLASSIAN_OAUTH_CLOUD_ID"),
+                cloud_id=os.getenv("CONFLUENCE_OAUTH_CLOUD_ID"),
             )
 
             # Try to load existing tokens
@@ -459,14 +459,14 @@ class BYOAccessTokenOAuthConfig:
     def from_env(cls) -> Optional["BYOAccessTokenOAuthConfig"]:
         """Create a BYOAccessTokenOAuthConfig from environment variables.
 
-        Reads `ATLASSIAN_OAUTH_CLOUD_ID` and `ATLASSIAN_OAUTH_ACCESS_TOKEN`.
+        Reads `CONFLUENCE_OAUTH_CLOUD_ID` and `CONFLUENCE_OAUTH_ACCESS_TOKEN`.
 
         Returns:
             BYOAccessTokenOAuthConfig instance or None if required
             environment variables are missing.
         """
-        cloud_id = os.getenv("ATLASSIAN_OAUTH_CLOUD_ID")
-        access_token = os.getenv("ATLASSIAN_OAUTH_ACCESS_TOKEN")
+        cloud_id = os.getenv("CONFLUENCE_OAUTH_CLOUD_ID")
+        access_token = os.getenv("CONFLUENCE_OAUTH_ACCESS_TOKEN")
 
         if not all([cloud_id, access_token]):
             return None
