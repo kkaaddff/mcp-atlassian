@@ -1,4 +1,4 @@
-"""MCP Confluence Servers Package."""
+"""MCP Confluence服务器包。"""
 
 from .main import main_mcp
 

@@ -1,4 +1,4 @@
-"""Module for Confluence space operations."""
+"""Confluence空间操作模块。"""
 
 import logging
 from typing import cast
@@ -11,45 +11,45 @@ logger = logging.getLogger("mcp-atlassian")
 
 
 class SpacesMixin(ConfluenceClient):
-    """Mixin for Confluence space operations."""
+    """Confluence空间操作的混入类。"""
 
     def get_spaces(self, start: int = 0, limit: int = 10) -> dict[str, object]:
         """
-        Get all available spaces.
+        获取所有可用的空间。
 
         Args:
-            start: The starting index for pagination
-            limit: Maximum number of spaces to return
+            start: 分页的起始索引
+            limit: 要返回的最大空间数
 
         Returns:
-            Dictionary containing space information with results and metadata
+            包含空间信息和元数据的字典
         """
         spaces = self.confluence.get_all_spaces(start=start, limit=limit)
-        # Cast the return value to the expected type
+        # 将返回值转换为预期类型
         return cast(dict[str, object], spaces)
 
     def get_user_contributed_spaces(self, limit: int = 250) -> dict:
         """
-        Get spaces the current user has contributed to.
+        获取当前用户贡献过的空间。
 
         Args:
-            limit: Maximum number of results to return
+            limit: 要返回的最大结果数
 
         Returns:
-            Dictionary of space keys to space information
+            空间键到空间信息的字典
         """
         try:
-            # Use CQL to find content the user has contributed to
+            # 使用CQL查找用户贡献过的内容
             cql = "contributor = currentUser() order by lastmodified DESC"
             results = self.confluence.cql(cql=cql, limit=limit)
 
-            # Extract and deduplicate spaces
+            # 提取和去重空间
             spaces = {}
             for result in results.get("results", []):
                 space_key = None
                 space_name = None
 
-                # Try to extract space from container
+                # 尝试从容器中提取空间
                 if "resultGlobalContainer" in result:
                     container = result.get("resultGlobalContainer", {})
                     space_name = container.get("title")
@@ -57,7 +57,7 @@ class SpacesMixin(ConfluenceClient):
                     if display_url and "/spaces/" in display_url:
                         space_key = display_url.split("/spaces/")[1].split("/")[0]
 
-                # Try to extract from content expandable
+                # 尝试从内容可扩展项中提取
                 if (
                     not space_key
                     and "content" in result
@@ -68,33 +68,33 @@ class SpacesMixin(ConfluenceClient):
                     if space_path and space_path.startswith("/rest/api/space/"):
                         space_key = space_path.split("/rest/api/space/")[1]
 
-                # Try to extract from URL
+                # 尝试从URL中提取
                 if not space_key and "url" in result:
                     url = result.get("url", "")
                     if url and url.startswith("/spaces/"):
                         space_key = url.split("/spaces/")[1].split("/")[0]
 
-                # Only add if we found a space key and it's not already in our results
+                # 仅在找到空间键且它不在我们的结果中时才添加
                 if space_key and space_key not in spaces:
-                    # Add some defaults if we couldn't extract all fields
-                    space_name = space_name or f"Space {space_key}"
+                    # 如果无法提取所有字段，则添加一些默认值
+                    space_name = space_name or f"空间 {space_key}"
                     spaces[space_key] = {"key": space_key, "name": space_name}
 
             return spaces
 
         except KeyError as e:
-            logger.error(f"Missing key in Confluence spaces data: {str(e)}")
+            logger.error(f"Confluence空间数据中缺少键: {str(e)}")
             return {}
         except ValueError as e:
-            logger.error(f"Invalid value in Confluence spaces: {str(e)}")
+            logger.error(f"Confluence空间中的值无效: {str(e)}")
             return {}
         except TypeError as e:
-            logger.error(f"Type error when processing Confluence spaces: {str(e)}")
+            logger.error(f"处理Confluence空间时发生类型错误: {str(e)}")
             return {}
         except requests.RequestException as e:
-            logger.error(f"Network error when fetching spaces: {str(e)}")
+            logger.error(f"获取空间时发生网络错误: {str(e)}")
             return {}
         except Exception as e:  # noqa: BLE001 - Intentional fallback with logging
-            logger.error(f"Unexpected error fetching Confluence spaces: {str(e)}")
-            logger.debug("Full exception details for Confluence spaces:", exc_info=True)
+            logger.error(f"获取Confluence空间时发生意外错误: {str(e)}")
+            logger.debug("Confluence空间的完整异常详情:", exc_info=True)
             return {}

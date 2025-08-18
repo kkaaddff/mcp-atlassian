@@ -1,14 +1,14 @@
-"""Test data factories for creating consistent test objects."""
+"""用于创建一致的测试对象的测试数据工厂。"""
 
 from typing import Any
 
 
 class JiraIssueFactory:
-    """Factory for creating Jira issue test data."""
+    """用于创建 Jira 问题测试数据的工厂。"""
 
     @staticmethod
     def create(key: str = "TEST-123", **overrides) -> dict[str, Any]:
-        """Create a Jira issue with default values."""
+        """创建具有默认值的 Jira 问题。"""
         defaults = {
             "id": "12345",
             "key": key,

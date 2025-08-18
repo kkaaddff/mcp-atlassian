@@ -1,4 +1,4 @@
 class MCPAtlassianAuthenticationError(Exception):
-    """Raised when Atlassian API authentication fails (401/403)."""
+    """当Atlassian API身份验证失败（401/403）时引发。"""
 
     pass

@@ -1,8 +1,8 @@
-"""Constants specific to Confluence and CQL."""
+"""Confluence和CQL特定的常量。"""
 
-# Based on https://developer.atlassian.com/cloud/confluence/cql-functions/#reserved-words
-# List might need refinement based on actual parser behavior
-# Using lowercase for case-insensitive matching
+# 基于 https://developer.atlassian.com/cloud/confluence/cql-functions/#reserved-words
+# 列表可能需要根据实际解析器行为进行完善
+# 使用小写字母进行不区分大小写的匹配
 RESERVED_CQL_WORDS = {
     "after",
     "and",
@@ -47,4 +47,4 @@ RESERVED_CQL_WORDS = {
     "update",
 }
 
-# Add other Confluence-specific constants here if needed in the future.
+# 如果将来需要，请在此处添加其他Confluence特定的常量。

@@ -1,6 +1,6 @@
-"""Dependency providers for ConfluenceFetcher with context awareness.
+"""具有上下文感知能力的ConfluenceFetcher依赖提供程序。
 
-Provides get_confluence_fetcher for use in tool functions.
+提供get_confluence_fetcher供工具函数使用。
 """
 
 from __future__ import annotations
@@ -30,30 +30,30 @@ def _create_user_config_for_fetcher(
     credentials: dict[str, Any],
     cloud_id: str | None = None,
 ) -> ConfluenceConfig:
-    """Create a user-specific configuration for Confluence fetchers.
+    """为Confluence获取器创建用户特定的配置。
 
     Args:
-        base_config: The base ConfluenceConfig to clone and modify.
-        auth_type: The authentication type ('basic' or 'pat').
-        credentials: Dictionary of credentials (token, email, etc).
-        cloud_id: Optional cloud ID (not used for basic/PAT auth).
+        base_config: 要克隆和修改的基础ConfluenceConfig。
+        auth_type: 身份验证类型（'basic'或'pat'）。
+        credentials: 凭据字典（token、email等）。
+        cloud_id: 可选的云ID（basic/PAT身份验证不使用）。
 
     Returns:
-        ConfluenceConfig with user-specific credentials.
+        具有用户特定凭据的ConfluenceConfig。
 
     Raises:
-        ValueError: If required credentials are missing or auth_type is unsupported.
-        TypeError: If base_config is not a supported type.
+        ValueError: 如果缺少必需的凭据或auth_type不受支持。
+        TypeError: 如果base_config不是受支持的类型。
     """
     if auth_type not in ["basic", "pat"]:
         raise ValueError(
-            f"Unsupported auth_type '{auth_type}' for user-specific config creation. Expected 'basic' or 'pat'."
+            f"用于创建用户特定配置的auth_type'{auth_type}'不受支持。应为'basic'或'pat'。"
         )
 
     username_for_config: str | None = credentials.get("user_email_context")
 
     logger.debug(
-        f"Creating user config for fetcher. Auth type: {auth_type}, Credentials keys: {credentials.keys()}"
+        f"为获取器创建用户配置。身份验证类型: {auth_type}, 凭据键: {credentials.keys()}"
     )
 
     common_args: dict[str, Any] = {
@@ -69,13 +69,13 @@ def _create_user_config_for_fetcher(
     if auth_type == "pat":
         user_pat = credentials.get("personal_access_token")
         if not user_pat:
-            raise ValueError("PAT missing in credentials for user auth_type 'pat'")
+            raise ValueError("用户auth_type'pat'的凭据中缺少PAT")
 
-        # Log warning if cloud_id is provided with PAT auth (not typically needed)
+        # 如果使用PAT身份验证提供了cloud_id，记录警告（通常不需要）
         if cloud_id:
             logger.warning(
-                f"Cloud ID '{cloud_id}' provided with PAT authentication. "
-                "PAT authentication typically uses the base URL directly and doesn't require cloud_id override."
+                f"使用PAT身份验证提供了云ID'{cloud_id}'。"
+                "PAT身份验证通常直接使用基础URL，不需要cloud_id覆盖。"
             )
 
         common_args.update(
@@ -89,7 +89,7 @@ def _create_user_config_for_fetcher(
         username = credentials.get("username")
         api_token = credentials.get("api_token")
         if not username or not api_token:
-            raise ValueError("Username and API token required for basic auth")
+            raise ValueError("基本身份验证需要用户名和API令牌")
 
         common_args.update(
             {
@@ -106,42 +106,42 @@ def _create_user_config_for_fetcher(
         user_confluence_config.spaces_filter = base_config.spaces_filter
         return user_confluence_config
     else:
-        raise TypeError(f"Unsupported base_config type: {type(base_config)}")
+        raise TypeError(f"不支持的base_config类型: {type(base_config)}")
 
 
 
 
 async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
-    """Returns a ConfluenceFetcher instance appropriate for the current request context.
+    """返回适合当前请求上下文的ConfluenceFetcher实例。
 
     Args:
-        ctx: The FastMCP context.
+        ctx: FastMCP上下文。
 
     Returns:
-        ConfluenceFetcher instance for the current user or global config.
+        当前用户或全局配置的ConfluenceFetcher实例。
 
     Raises:
-        ValueError: If configuration or credentials are invalid.
+        ValueError: 如果配置或凭据无效。
     """
-    logger.debug(f"get_confluence_fetcher: ENTERED. Context ID: {id(ctx)}")
+    logger.debug(f"get_confluence_fetcher: 进入。上下文ID: {id(ctx)}")
     try:
         request: Request = get_http_request()
         logger.debug(
-            f"get_confluence_fetcher: In HTTP request context. Request URL: {request.url}. "
-            f"State.confluence_fetcher exists: {hasattr(request.state, 'confluence_fetcher') and request.state.confluence_fetcher is not None}. "
-            f"State.user_auth_type: {getattr(request.state, 'user_atlassian_auth_type', 'N/A')}. "
-            f"State.user_token_present: {hasattr(request.state, 'user_atlassian_token') and request.state.user_atlassian_token is not None}."
+            f"get_confluence_fetcher: 在HTTP请求上下文中。请求URL: {request.url}。"
+            f"State.confluence_fetcher存在: {hasattr(request.state, 'confluence_fetcher') and request.state.confluence_fetcher is not None}。"
+            f"State.user_auth_type: {getattr(request.state, 'user_atlassian_auth_type', 'N/A')}。"
+            f"State.user_token_present: {hasattr(request.state, 'user_atlassian_token') and request.state.user_atlassian_token is not None}。"
         )
         if (
             hasattr(request.state, "confluence_fetcher")
             and request.state.confluence_fetcher
         ):
             logger.debug(
-                "get_confluence_fetcher: Returning ConfluenceFetcher from request.state."
+                "get_confluence_fetcher: 从request.state返回ConfluenceFetcher。"
             )
             return request.state.confluence_fetcher
         user_auth_type = getattr(request.state, "user_atlassian_auth_type", None)
-        logger.debug(f"get_confluence_fetcher: User auth type: {user_auth_type}")
+        logger.debug(f"get_confluence_fetcher: 用户身份验证类型: {user_auth_type}")
         if user_auth_type in ["basic", "pat"] and hasattr(
             request.state, "user_atlassian_token"
         ):
@@ -150,7 +150,7 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             user_cloud_id = getattr(request.state, "user_atlassian_cloud_id", None)
 
             if not user_token:
-                raise ValueError("User Atlassian token found in state but is empty.")
+                raise ValueError("在状态中找到用户Atlassian令牌但为空。")
             credentials = {"user_email_context": user_email}
             if user_auth_type == "basic":
                 credentials["api_token"] = user_token
@@ -165,12 +165,12 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             )
             if not app_lifespan_ctx or not app_lifespan_ctx.full_confluence_config:
                 raise ValueError(
-                    "Confluence global configuration (URL, SSL) is not available from lifespan context."
+                    "Confluence全局配置（URL、SSL）无法从生命周期上下文中获取。"
                 )
 
-            cloud_id_info = f" with cloudId {user_cloud_id}" if user_cloud_id else ""
+            cloud_id_info = f" 带有cloudId {user_cloud_id}" if user_cloud_id else ""
             logger.info(
-                f"Creating user-specific ConfluenceFetcher (type: {user_auth_type}) for user {user_email or 'unknown'} (token ...{str(user_token)[-8:]}){cloud_id_info}"
+                f"为用户{user_email or 'unknown'}创建用户特定的ConfluenceFetcher（类型: {user_auth_type}）（令牌...{str(user_token)[-8:]}）{cloud_id_info}"
             )
             user_specific_config = _create_user_config_for_fetcher(
                 base_config=app_lifespan_ctx.full_confluence_config,
@@ -181,7 +181,7 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             try:
                 user_confluence_fetcher = ConfluenceFetcher(config=user_specific_config)
                 current_user_data = user_confluence_fetcher.get_current_user_info()
-                # Try to get email from Confluence if not provided (can happen with PAT)
+                # 尝试从Confluence获取邮箱（如果未提供）（使用PAT时可能发生）
                 derived_email = (
                     current_user_data.get("email")
                     if isinstance(current_user_data, dict)
@@ -193,7 +193,7 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
                     else None
                 )
                 logger.debug(
-                    f"get_confluence_fetcher: Validated Confluence token. User context: Email='{user_email or derived_email}', DisplayName='{display_name}'"
+                    f"get_confluence_fetcher: 已验证Confluence令牌。用户上下文: Email='{user_email or derived_email}', DisplayName='{display_name}'"
                 )
                 request.state.confluence_fetcher = user_confluence_fetcher
                 if (
@@ -207,16 +207,16 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
                 return user_confluence_fetcher
             except Exception as e:
                 logger.error(
-                    f"get_confluence_fetcher: Failed to create/validate user-specific ConfluenceFetcher: {e}"
+                    f"get_confluence_fetcher: 创建/验证用户特定的ConfluenceFetcher失败: {e}"
                 )
-                raise ValueError(f"Invalid user Confluence token or configuration: {e}")
+                raise ValueError(f"无效的用户Confluence令牌或配置: {e}")
         else:
             logger.debug(
-                f"get_confluence_fetcher: No user-specific ConfluenceFetcher. Auth type: {user_auth_type}. Token present: {hasattr(request.state, 'user_atlassian_token')}. Will use global fallback."
+                f"get_confluence_fetcher: 没有用户特定的ConfluenceFetcher。身份验证类型: {user_auth_type}。令牌存在: {hasattr(request.state, 'user_atlassian_token')}。将使用全局回退。"
             )
     except RuntimeError:
         logger.debug(
-            "Not in an HTTP request context. Attempting global ConfluenceFetcher for non-HTTP."
+            "不在HTTP请求上下文中。尝试为非HTTP使用全局ConfluenceFetcher。"
         )
     lifespan_ctx_dict_global = ctx.request_context.lifespan_context  # type: ignore
     app_lifespan_ctx_global: MainAppContext | None = (
@@ -226,11 +226,11 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
     )
     if app_lifespan_ctx_global and app_lifespan_ctx_global.full_confluence_config:
         logger.debug(
-            "get_confluence_fetcher: Using global ConfluenceFetcher from lifespan_context. "
-            f"Global config auth_type: {app_lifespan_ctx_global.full_confluence_config.auth_type}"
+            "get_confluence_fetcher: 从lifespan_context使用全局ConfluenceFetcher。"
+            f"全局配置auth_type: {app_lifespan_ctx_global.full_confluence_config.auth_type}"
         )
         return ConfluenceFetcher(config=app_lifespan_ctx_global.full_confluence_config)
-    logger.error("Confluence configuration could not be resolved.")
+    logger.error("无法解析Confluence配置。")
     raise ValueError(
-        "Confluence client (fetcher) not available. Ensure server is configured correctly."
+        "Confluence客户端（获取器）不可用。确保服务器配置正确。"
     )

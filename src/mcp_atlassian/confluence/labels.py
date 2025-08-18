@@ -1,4 +1,4 @@
-"""Module for Confluence label operations."""
+"""Confluence标签操作模块。"""
 
 import logging
 
@@ -9,29 +9,29 @@ logger = logging.getLogger("mcp-atlassian")
 
 
 class LabelsMixin(ConfluenceClient):
-    """Mixin for Confluence label operations."""
+    """Confluence标签操作的混入类。"""
 
     def get_page_labels(self, page_id: str) -> list[ConfluenceLabel]:
         """
-        Get all labels for a specific page.
+        获取特定页面的所有标签。
 
         Args:
-            page_id: The ID of the page to get labels from
+            page_id: 要获取标签的页面ID
 
         Returns:
-            List of ConfluenceLabel models containing label content and metadata
+            包含标签内容和元数据的ConfluenceLabel模型列表
 
         Raises:
-            Exception: If there is an error getting the label
+            Exception: 如果获取标签时发生错误
         """
         try:
-            # Get labels with expanded content
+            # 获取带有扩展内容的标签
             labels_response = self.confluence.get_page_labels(page_id=page_id)
 
-            # Process each label
+            # 处理每个标签
             label_models = []
             for label_data in labels_response.get("results"):
-                # Create the model with the processed content
+                # 使用处理后的内容创建模型
                 label_model = ConfluenceLabel.from_api_response(
                     label_data,
                     base_url=self.config.url,
@@ -42,27 +42,27 @@ class LabelsMixin(ConfluenceClient):
             return label_models
 
         except Exception as e:
-            logger.error(f"Failed fetching labels from page {page_id}: {str(e)}")
+            logger.error(f"从页面{page_id}获取标签失败: {str(e)}")
             raise Exception(
-                f"Failed fetching labels from page {page_id}: {str(e)}"
+                f"从页面{page_id}获取标签失败: {str(e)}"
             ) from e
 
     def add_page_label(self, page_id: str, name: str) -> list[ConfluenceLabel]:
         """
-        Add a label to a Confluence page.
+        向Confluence页面添加标签。
 
         Args:
-            page_id: The ID of the page to update
-            name: The name of the label
+            page_id: 要更新的页面ID
+            name: 标签的名称
 
         Returns:
-            Label model containing the updated list of labels
+            包含更新后标签列表的标签模型
 
         Raises:
-            Exception: If there is an error adding the label
+            Exception: 如果添加标签时发生错误
         """
         try:
-            logger.debug(f"Adding label with name '{name}' to page {page_id}")
+            logger.debug(f"向页面{page_id}添加名为'{name}'的标签")
 
             update_kwargs = {
                 "page_id": page_id,
@@ -70,10 +70,10 @@ class LabelsMixin(ConfluenceClient):
             }
             response = self.confluence.set_page_label(**update_kwargs)
 
-            # After update, refresh the page data
+            # 更新后，刷新页面数据
             return self.get_page_labels(page_id)
         except Exception as e:
-            logger.error(f"Error adding label '{name}' to page {page_id}: {str(e)}")
+            logger.error(f"向页面{page_id}添加标签'{name}'时发生错误: {str(e)}")
             raise Exception(
-                f"Failed to add label '{name}' to page {page_id}: {str(e)}"
+                f"向页面{page_id}添加标签'{name}'失败: {str(e)}"
             ) from e

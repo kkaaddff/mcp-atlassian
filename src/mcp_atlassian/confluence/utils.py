@@ -1,4 +1,4 @@
-"""Utility functions specific to Confluence operations."""
+"""Confluence操作特定的实用工具函数。"""
 
 import logging
 
@@ -9,58 +9,58 @@ logger = logging.getLogger(__name__)
 
 def quote_cql_identifier_if_needed(identifier: str) -> str:
     """
-    Quotes a Confluence identifier for safe use in CQL literals if required.
+    如果需要，为Confluence标识符添加引号以便在CQL字面量中安全使用。
 
-    Handles:
-    - Personal space keys starting with '~'.
-    - Identifiers matching reserved CQL words (case-insensitive).
-    - Identifiers starting with a number.
-    - Escapes internal quotes ('"') and backslashes ('\\') within the identifier
-      *before* quoting.
+    处理：
+    - 以'~'开头的个人空间键。
+    - 匹配保留CQL字的标识符（不区分大小写）。
+    - 以数字开头的标识符。
+    - 在标识符内转义内部引号（'"'）和反斜杠（'\\'）
+      *在* 引用之前。
 
     Args:
-        identifier: The identifier string (e.g., space key).
+        identifier: 标识符字符串（例如，空间键）。
 
     Returns:
-        The identifier, correctly quoted and escaped if necessary,
-        otherwise the original identifier.
+        如果需要，正确引用和转义的标识符，
+        否则返回原始标识符。
     """
     needs_quoting = False
     identifier_lower = identifier.lower()
 
-    # Rule 1: Starts with ~ (Personal Space Key)
+    # 规则1：以~开头（个人空间键）
     if identifier.startswith("~"):
         needs_quoting = True
-        logger.debug(f"Identifier '{identifier}' needs quoting (starts with ~).")
+        logger.debug(f"标识符'{identifier}'需要引用（以~开头）。")
 
-    # Rule 2: Is a reserved word (case-insensitive check)
+    # 规则2：是保留字（不区分大小写检查）
     elif identifier_lower in RESERVED_CQL_WORDS:
         needs_quoting = True
-        logger.debug(f"Identifier '{identifier}' needs quoting (reserved word).")
+        logger.debug(f"标识符'{identifier}'需要引用（保留字）。")
 
-    # Rule 3: Starts with a number
+    # 规则3：以数字开头
     elif identifier and identifier[0].isdigit():
         needs_quoting = True
-        logger.debug(f"Identifier '{identifier}' needs quoting (starts with digit).")
+        logger.debug(f"标识符'{identifier}'需要引用（以数字开头）。")
 
-    # Rule 4: Contains internal quotes or backslashes (always needs quoting+escaping)
+    # 规则4：包含内部引号或反斜杠（总是需要引用+转义）
     elif '"' in identifier or "\\" in identifier:
         needs_quoting = True
         logger.debug(
-            f"Identifier '{identifier}' needs quoting (contains quotes/backslashes)."
+            f"标识符'{identifier}'需要引用（包含引号/反斜杠）。"
         )
 
-    # Add more rules here if other characters prove problematic (e.g., spaces, hyphens)
+    # 如果其他字符被证明有问题，请在此处添加更多规则（例如，空格、连字符）
     # elif ' ' in identifier or '-' in identifier:
     #    needs_quoting = True
 
     if needs_quoting:
-        # Escape internal backslashes first, then double quotes
+        # 首先转义内部反斜杠，然后转义双引号
         escaped_identifier = identifier.replace("\\", "\\\\").replace('"', '\\"')
         quoted_escaped = f'"{escaped_identifier}"'
-        logger.debug(f"Quoted and escaped identifier: {quoted_escaped}")
+        logger.debug(f"引用和转义的标识符: {quoted_escaped}")
         return quoted_escaped
     else:
-        # Return the original identifier if no quoting is needed
-        logger.debug(f"Identifier '{identifier}' does not need quoting.")
+        # 如果不需要引用，则返回原始标识符
+        logger.debug(f"标识符'{identifier}'不需要引用。")
         return identifier

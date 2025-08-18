@@ -1,6 +1,6 @@
-"""Confluence API integration module.
+"""Confluence API集成模块。
 
-This module provides access to Confluence content through the Model Context Protocol.
+此模块通过模型上下文协议提供对Confluence内容的访问。
 """
 
 from .client import ConfluenceClient
@@ -16,10 +16,9 @@ from .users import UsersMixin
 class ConfluenceFetcher(
     SearchMixin, SpacesMixin, PagesMixin, CommentsMixin, LabelsMixin, UsersMixin
 ):
-    """Main entry point for Confluence operations, providing backward compatibility.
+    """Confluence操作的主入口点，提供向后兼容性。
 
-    This class combines functionality from various mixins to maintain the same
-    API as the original ConfluenceFetcher class.
+    此类组合了来自各种混入类的功能，以保持与原始ConfluenceFetcher类相同的API。
     """
 
     pass

@@ -1,9 +1,8 @@
 """
-Root pytest configuration file for MCP Atlassian tests.
+MCP Atlassian 测试的根 pytest 配置文件。
 
-This module provides session-scoped fixtures and utilities that are shared
-across all test modules. It integrates with the new test utilities framework
-to provide efficient, reusable test fixtures.
+该模块提供跨所有测试模块共享的会话范围的 fixture 和实用程序。
+它与新的测试实用程序框架集成，提供高效、可重用的测试 fixture。
 """
 
 import pytest
@@ -18,30 +17,30 @@ from tests.utils.mocks import MockAtlassianClient, MockEnvironment
 
 
 def pytest_addoption(parser):
-    """Add command-line options for tests."""
+    """为测试添加命令行选项。"""
     parser.addoption(
         "--use-real-data",
         action="store_true",
         default=False,
-        help="Run tests that use real API data (requires env vars)",
+        help="运行使用真实 API 数据的测试（需要环境变量）",
     )
 
 
 # ============================================================================
-# Session-Scoped Configuration Fixtures
+# 会话范围的配置 Fixture
 # ============================================================================
 
 
 @pytest.fixture(scope="session")
 def session_auth_configs():
     """
-    Session-scoped fixture providing authentication configuration templates.
+    会话范围的 fixture，提供身份验证配置模板。
 
-    This fixture is computed once per test session and provides standard
-    authentication configurations for basic auth and PAT scenarios.
+    该 fixture 在每个测试会话中计算一次，为基本身份验证和 PAT 场景
+    提供标准的身份验证配置。
 
-    Returns:
-        Dict[str, Dict[str, str]]: Authentication configuration templates
+    返回：
+        Dict[str, Dict[str, str]]: 身份验证配置模板
     """
     return {
         "basic_auth": AuthConfigFactory.create_basic_auth_config(),
@@ -62,13 +61,13 @@ def session_auth_configs():
 @pytest.fixture(scope="session")
 def session_mock_data():
     """
-    Session-scoped fixture providing mock data templates.
+    会话范围的 fixture，提供模拟数据模板。
 
-    This fixture creates mock data templates once per session to avoid
-    recreating expensive mock objects for every test.
+    该 fixture 在每个会话中创建一次模拟数据模板，以避免为每个测试
+    重新创建昂贵的模拟对象。
 
-    Returns:
-        Dict[str, Any]: Mock data templates for various API responses
+    返回：
+        Dict[str, Any]: 各种 API 响应的模拟数据模板
     """
     return {
         "jira_issue": JiraIssueFactory.create(),
@@ -90,16 +89,16 @@ def session_mock_data():
 
 
 # ============================================================================
-# Environment and Configuration Fixtures
+# 环境和配置 Fixture
 # ============================================================================
 
 
 @pytest.fixture
 def clean_environment():
     """
-    Fixture that provides a clean environment with no auth variables.
+    提供无身份验证变量的干净环境的 fixture。
 
-    This is useful for testing error conditions and configuration validation.
+    这对于测试错误条件和配置验证很有用。
     """
     with MockEnvironment.clean_env() as env:
         yield env
@@ -108,10 +107,9 @@ def clean_environment():
 @pytest.fixture
 def pat_environment():
     """
-    Fixture that provides a complete PAT environment setup.
+    提供完整 PAT 环境设置的 fixture。
 
-    This sets up all necessary PAT environment variables for testing
-    PAT-based authentication flows.
+    这会设置所有必要的 PAT 环境变量，用于测试基于 PAT 的身份验证流程。
     """
     with MockEnvironment.pat_env() as env:
         yield env
@@ -120,28 +118,28 @@ def pat_environment():
 @pytest.fixture
 def basic_auth_environment():
     """
-    Fixture that provides basic authentication environment setup.
+    提供基本身份验证环境设置的 fixture。
 
-    This sets up username/token authentication for both Jira and Confluence.
+    这为 Jira 和 Confluence 设置用户名/令牌身份验证。
     """
     with MockEnvironment.basic_auth_env() as env:
         yield env
 
 
 # ============================================================================
-# Factory-Based Fixtures
+# 基于 Factory 的 Fixture
 # ============================================================================
 
 
 @pytest.fixture
 def make_jira_issue():
     """
-    Factory fixture for creating Jira issues with customizable properties.
+    用于创建具有可自定义属性的 Jira 问题的 factory fixture。
 
-    Returns:
-        Callable: Factory function that creates Jira issue data
+    返回：
+        Callable: 创建 Jira 问题数据的 factory 函数
 
-    Example:
+    示例：
         def test_issue_creation(make_jira_issue):
             issue = make_jira_issue(key="CUSTOM-123",
                                   fields={"priority": {"name": "High"}})
@@ -153,12 +151,12 @@ def make_jira_issue():
 @pytest.fixture
 def make_confluence_page():
     """
-    Factory fixture for creating Confluence pages with customizable properties.
+    用于创建具有可自定义属性的 Confluence 页面的 factory fixture。
 
-    Returns:
-        Callable: Factory function that creates Confluence page data
+    返回：
+        Callable: 创建 Confluence 页面数据的 factory 函数
 
-    Example:
+    示例：
         def test_page_creation(make_confluence_page):
             page = make_confluence_page(title="Custom Page",
                                       space={"key": "CUSTOM"})
@@ -170,12 +168,12 @@ def make_confluence_page():
 @pytest.fixture
 def make_auth_config():
     """
-    Factory fixture for creating authentication configurations.
+    用于创建身份验证配置的 factory fixture。
 
-    Returns:
-        Dict[str, Callable]: Factory functions for different auth types
+    返回：
+        Dict[str, Callable]: 不同身份验证类型的 factory 函数
 
-    Example:
+    示例：
         def test_basic_config(make_auth_config):
             config = make_auth_config["basic"](username="custom-user")
             assert config["username"] == "custom-user"
@@ -189,12 +187,12 @@ def make_auth_config():
 @pytest.fixture
 def make_api_error():
     """
-    Factory fixture for creating API error responses.
+    用于创建 API 错误响应的 factory fixture。
 
-    Returns:
-        Callable: Factory function that creates error response data
+    返回：
+        Callable: 创建错误响应数据的 factory 函数
 
-    Example:
+    示例：
         def test_error_handling(make_api_error):
             error = make_api_error(status_code=404, message="Not Found")
             assert error["status"] == 404
@@ -203,20 +201,19 @@ def make_api_error():
 
 
 # ============================================================================
-# Mock Client Fixtures
+# 模拟客户端 Fixture
 # ============================================================================
 
 
 @pytest.fixture
 def mock_jira_client():
     """
-    Fixture providing a pre-configured mock Jira client.
+    提供预配置模拟 Jira 客户端的 fixture。
 
-    The client comes with sensible defaults for common operations
-    but can be customized per test as needed.
+    该客户端具有常见操作的合理默认值，但可以根据每个测试的需要进行自定义。
 
-    Returns:
-        MagicMock: Configured mock Jira client
+    返回：
+        MagicMock: 配置的模拟 Jira 客户端
     """
     return MockAtlassianClient.create_jira_client()
 
@@ -224,30 +221,29 @@ def mock_jira_client():
 @pytest.fixture
 def mock_confluence_client():
     """
-    Fixture providing a pre-configured mock Confluence client.
+    提供预配置模拟 Confluence 客户端的 fixture。
 
-    The client comes with sensible defaults for common operations
-    but can be customized per test as needed.
+    该客户端具有常见操作的合理默认值，但可以根据每个测试的需要进行自定义。
 
-    Returns:
-        MagicMock: Configured mock Confluence client
+    返回：
+        MagicMock: 配置的模拟 Confluence 客户端
     """
     return MockAtlassianClient.create_confluence_client()
 
 
 # ============================================================================
-# Compatibility Fixtures (maintain backward compatibility)
+# 兼容性 Fixture（保持向后兼容）
 # ============================================================================
 
 
 @pytest.fixture
 def use_real_jira_data(request):
     """
-    Check if real Jira data tests should be run.
+    检查是否应该运行真实 Jira 数据测试。
 
-    This will be True if the --use-real-data flag is passed to pytest.
+    如果 --use-real-data 标志传递给 pytest，这将返回 True。
 
-    Note: This fixture is maintained for backward compatibility.
+    注意：此 fixture 为向后兼容而维护。
     """
     return request.config.getoption("--use-real-data")
 
@@ -255,32 +251,32 @@ def use_real_jira_data(request):
 @pytest.fixture
 def use_real_confluence_data(request):
     """
-    Check if real Confluence data tests should be run.
+    检查是否应该运行真实 Confluence 数据测试。
 
-    This will be True if the --use-real-data flag is passed to pytest.
+    如果 --use-real-data 标志传递给 pytest，这将返回 True。
 
-    Note: This fixture is maintained for backward compatibility.
+    注意：此 fixture 为向后兼容而维护。
     """
     return request.config.getoption("--use-real-data")
 
 
 # ============================================================================
-# Advanced Environment Utilities
+# 高级环境实用程序
 # ============================================================================
 
 
 @pytest.fixture
 def env_var_manager():
     """
-    Fixture providing utilities for managing environment variables in tests.
+    提供在测试中管理环境变量的实用程序的 fixture。
 
-    Returns:
-        MockEnvironment: Environment management utilities
+    返回：
+        MockEnvironment: 环境管理实用程序
 
-    Example:
+    示例：
         def test_with_custom_env(env_var_manager):
             with env_var_manager.pat_env():
-                # Test PAT functionality
+                # 测试 PAT 功能
                 pass
     """
     return MockEnvironment
@@ -289,16 +285,16 @@ def env_var_manager():
 @pytest.fixture
 def parametrized_auth_env(request):
     """
-    Parametrized fixture for testing with different authentication environments.
+    用于测试不同身份验证环境的参数化 fixture。
 
-    This fixture can be used with pytest.mark.parametrize to test the same
-    functionality with different authentication setups.
+    该 fixture 可以与 pytest.mark.parametrize 一起使用，以使用不同的身份验证设置
+    测试相同的功能。
 
-    Example:
+    示例：
         @pytest.mark.parametrize("parametrized_auth_env",
                                ["pat", "basic_auth"], indirect=True)
         def test_auth_scenarios(parametrized_auth_env):
-            # Test will run once for PAT and once for basic auth
+            # 测试将为 PAT 和基本身份验证各运行一次
             pass
     """
     auth_type = request.param
@@ -313,27 +309,26 @@ def parametrized_auth_env(request):
         with MockEnvironment.clean_env() as env:
             yield env
     else:
-        raise ValueError(f"Unknown auth type: {auth_type}")
+        raise ValueError(f"未知的身份验证类型: {auth_type}")
 
 
 # ============================================================================
-# Session Validation and Health Checks
+# 会话验证和健康检查
 # ============================================================================
 
 
 @pytest.fixture(scope="session", autouse=True)
 def validate_test_environment():
     """
-    Session-scoped fixture that validates the test environment setup.
+    会话范围的 fixture，验证测试环境设置。
 
-    This fixture runs automatically and ensures that the test environment
-    is properly configured for running the test suite.
+    该 fixture 自动运行，确保测试环境已正确配置以运行测试套件。
     """
-    # Validate that test utilities are importable
+    # 验证测试实用程序是否可导入
     try:
         import importlib.util
 
-        # Check if modules can be imported
+        # 检查模块是否可以导入
         for module_name in [
             "tests.fixtures.confluence_mocks",
             "tests.fixtures.jira_mocks",
@@ -343,14 +338,14 @@ def validate_test_environment():
         ]:
             spec = importlib.util.find_spec(module_name)
             if spec is None:
-                pytest.fail(f"Failed to find module: {module_name}")
+                pytest.fail(f"找不到模块: {module_name}")
     except ImportError as e:
-        pytest.fail(f"Failed to import test utilities: {e}")
+        pytest.fail(f"导入测试实用程序失败: {e}")
 
-    # Log session start
-    print("\n🧪 Starting MCP Atlassian test session with enhanced fixtures")
+    # 记录会话开始
+    print("\n🧪 使用增强的 fixture 开始 MCP Atlassian 测试会话")
 
     yield
 
-    # Log session end
-    print("\n✅ Completed MCP Atlassian test session")
+    # 记录会话结束
+    print("\n✅ 完成 MCP Atlassian 测试会话")

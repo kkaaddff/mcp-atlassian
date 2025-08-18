@@ -1,4 +1,4 @@
-"""Utility functions related to environment checking."""
+"""与环境检查相关的实用函数。"""
 
 import logging
 import os
@@ -9,7 +9,7 @@ logger = logging.getLogger("mcp-confluence.utils.environment")
 
 
 def get_available_services() -> dict[str, bool | None]:
-    """Determine which services are available based on environment variables."""
+    """根据环境变量确定哪些服务可用。"""
     confluence_url = os.getenv("CONFLUENCE_URL")
     confluence_is_setup = False
     if confluence_url:
@@ -23,19 +23,19 @@ def get_available_services() -> dict[str, bool | None]:
                 ]
             ):
                 confluence_is_setup = True
-                logger.info("Using Confluence Cloud Basic Authentication (API Token)")
+                logger.info("使用 Confluence Cloud 基本身份验证（API 令牌）")
         else:  # Server/Data Center
             if os.getenv("CONFLUENCE_PERSONAL_TOKEN") or (
                 os.getenv("CONFLUENCE_USERNAME") and os.getenv("CONFLUENCE_API_TOKEN")
             ):
                 confluence_is_setup = True
                 logger.info(
-                    "Using Confluence Server/Data Center authentication (PAT or Basic Auth)"
+                    "使用 Confluence Server/Data Center 身份验证（PAT 或基本身份验证）"
                 )
 
     if not confluence_is_setup:
         logger.info(
-            "Confluence is not configured or required environment variables are missing."
+            "Confluence 未配置或缺少必需的环境变量。"
         )
 
     return {"confluence": confluence_is_setup}

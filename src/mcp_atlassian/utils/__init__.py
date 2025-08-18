@@ -1,12 +1,12 @@
 """
-Utility functions for the MCP Atlassian integration.
-This package provides various utility functions used throughout the codebase.
+MCP Atlassian集成的实用函数。
+此包提供在整个代码库中使用的各种实用函数。
 """
 
 from .date import parse_date
 from .io import is_read_only_mode
 
-# Export lifecycle utilities
+# 导出生命周期实用函数
 from .lifecycle import (
     ensure_clean_exit,
     setup_signal_handlers,
@@ -16,7 +16,7 @@ from .logging import setup_logging
 from .ssl import SSLIgnoreAdapter, configure_ssl_verification
 from .urls import is_atlassian_cloud_url
 
-# Export all utility functions for backward compatibility
+# 为向后兼容导出所有实用函数
 __all__ = [
     "SSLIgnoreAdapter",
     "configure_ssl_verification",

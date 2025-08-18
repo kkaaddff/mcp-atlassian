@@ -1,4 +1,4 @@
-"""Main FastMCP server setup for Confluence integration."""
+"""Confluence集成的FastMCP服务器主设置。"""
 
 import logging
 from collections.abc import AsyncIterator
@@ -29,12 +29,14 @@ logger = logging.getLogger("mcp-confluence.server.main")
 
 
 async def health_check(request: Request) -> JSONResponse:
+    """健康检查端点"""
     return JSONResponse({"status": "ok"})
 
 
 @asynccontextmanager
 async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
-    logger.info("Main Confluence MCP server lifespan starting...")
+    """主应用程序生命周期管理器"""
+    logger.info("主Confluence MCP服务器生命周期启动中...")
     services = get_available_services()
     read_only = is_read_only_mode()
     enabled_tools = get_enabled_tools()
@@ -47,49 +49,49 @@ async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
             if confluence_config.is_auth_configured():
                 loaded_confluence_config = confluence_config
                 logger.info(
-                    "Confluence configuration loaded and authentication is configured."
+                    "Confluence配置已加载，身份验证已配置。"
                 )
             else:
                 logger.warning(
-                    "Confluence URL found, but authentication is not fully configured. Confluence tools will be unavailable."
+                    "找到Confluence URL，但身份验证未完全配置。Confluence工具将不可用。"
                 )
         except Exception as e:
-            logger.error(f"Failed to load Confluence configuration: {e}", exc_info=True)
+            logger.error(f"加载Confluence配置失败: {e}", exc_info=True)
 
     app_context = MainAppContext(
         full_confluence_config=loaded_confluence_config,
         read_only=read_only,
         enabled_tools=enabled_tools,
     )
-    logger.info(f"Read-only mode: {'ENABLED' if read_only else 'DISABLED'}")
-    logger.info(f"Enabled tools filter: {enabled_tools or 'All tools enabled'}")
+    logger.info(f"只读模式: {'已启用' if read_only else '已禁用'}")
+    logger.info(f"启用的工具过滤器: {enabled_tools or '所有工具已启用'}")
 
     try:
         yield {"app_lifespan_context": app_context}
     except Exception as e:
-        logger.error(f"Error during lifespan: {e}", exc_info=True)
+        logger.error(f"生命周期期间发生错误: {e}", exc_info=True)
         raise
     finally:
-        logger.info("Main Confluence MCP server lifespan shutting down...")
-        # Perform any necessary cleanup here
+        logger.info("主Confluence MCP服务器生命周期关闭中...")
+        # 在此执行任何必要的清理工作
         try:
-            # Close any open connections if needed
+            # 如果需要，关闭任何打开的连接
             if loaded_confluence_config:
-                logger.debug("Cleaning up Confluence resources...")
+                logger.debug("清理Confluence资源...")
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}", exc_info=True)
-        logger.info("Main Confluence MCP server lifespan shutdown complete.")
+            logger.error(f"清理期间发生错误: {e}", exc_info=True)
+        logger.info("主Confluence MCP服务器生命周期关闭完成。")
 
 
 class ConfluenceMCP(FastMCP[MainAppContext]):
-    """Custom FastMCP server class for Confluence integration with tool filtering."""
+    """用于Confluence集成的自定义FastMCP服务器类，具有工具过滤功能。"""
 
     async def _mcp_list_tools(self) -> list[MCPTool]:
-        # Filter tools based on enabled_tools, read_only mode, and service configuration from the lifespan context.
+        # 根据生命周期上下文中的enabled_tools、read_only模式和服务配置过滤工具。
         req_context = self._mcp_server.request_context
         if req_context is None or req_context.lifespan_context is None:
             logger.warning(
-                "Lifespan context not available during _main_mcp_list_tools call."
+                "在_main_mcp_list_tools调用期间生命周期上下文不可用。"
             )
             return []
 
@@ -115,7 +117,7 @@ class ConfluenceMCP(FastMCP[MainAppContext]):
 
         all_tools: dict[str, FastMCPTool] = await self.get_tools()
         logger.debug(
-            f"Aggregated {len(all_tools)} tools before filtering: {list(all_tools.keys())}"
+            f"过滤前聚合了{len(all_tools)}个工具: {list(all_tools.keys())}"
         )
 
         filtered_tools: list[MCPTool] = []
@@ -123,27 +125,27 @@ class ConfluenceMCP(FastMCP[MainAppContext]):
             tool_tags = tool_obj.tags
 
             if not should_include_tool(registered_name, enabled_tools_filter):
-                logger.debug(f"Excluding tool '{registered_name}' (not enabled)")
+                logger.debug(f"排除工具'{registered_name}'（未启用）")
                 continue
 
             if tool_obj and read_only and "write" in tool_tags:
                 logger.debug(
-                    f"Excluding tool '{registered_name}' due to read-only mode and 'write' tag"
+                    f"由于只读模式和'write'标签，排除工具'{registered_name}'"
                 )
                 continue
 
-            # Exclude Confluence tools if config is not fully authenticated
+            # 如果配置未完全通过身份验证，排除Confluence工具
             is_confluence_tool = "confluence" in tool_tags
             service_configured_and_available = True
             if app_lifespan_state:
                 if is_confluence_tool and not app_lifespan_state.full_confluence_config:
                     logger.debug(
-                        f"Excluding Confluence tool '{registered_name}' as Confluence configuration/authentication is incomplete."
+                        f"排除Confluence工具'{registered_name}'，因为Confluence配置/身份验证不完整。"
                     )
                     service_configured_and_available = False
             elif is_confluence_tool:
                 logger.warning(
-                    f"Excluding tool '{registered_name}' as application context is unavailable to verify service configuration."
+                    f"排除工具'{registered_name}'，因为应用程序上下文不可用，无法验证服务配置。"
                 )
                 service_configured_and_available = False
 
@@ -153,7 +155,7 @@ class ConfluenceMCP(FastMCP[MainAppContext]):
             filtered_tools.append(tool_obj.to_mcp_tool(name=registered_name))
 
         logger.debug(
-            f"_main_mcp_list_tools: Total tools after filtering: {len(filtered_tools)}"
+            f"_main_mcp_list_tools: 过滤后的工具总数: {len(filtered_tools)}"
         )
         return filtered_tools
 
@@ -163,6 +165,7 @@ class ConfluenceMCP(FastMCP[MainAppContext]):
         middleware: list[Middleware] | None = None,
         transport: Literal["streamable-http", "sse"] = "streamable-http",
     ) -> "Starlette":
+        """创建带有用户令牌中间件的HTTP应用程序"""
         user_token_mw = Middleware(UserTokenMiddleware, mcp_server_ref=self)
         final_middleware_list = [user_token_mw]
         if middleware:
@@ -179,35 +182,37 @@ token_validation_cache: TTLCache[
 
 
 class UserTokenMiddleware(BaseHTTPMiddleware):
-    """Middleware to extract Atlassian user tokens/credentials from Authorization headers."""
+    """从Authorization头中提取Atlassian用户令牌/凭据的中间件。"""
 
     def __init__(
         self, app: Any, mcp_server_ref: Optional["ConfluenceMCP"] = None
     ) -> None:
+        """初始化用户令牌中间件"""
         super().__init__(app)
         self.mcp_server_ref = mcp_server_ref
         if not self.mcp_server_ref:
             logger.warning(
-                "UserTokenMiddleware initialized without mcp_server_ref. Path matching for MCP endpoint might fail if settings are needed."
+                "UserTokenMiddleware在未提供mcp_server_ref的情况下初始化。如果需要设置，MCP端点的路径匹配可能会失败。"
             )
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> JSONResponse:
+        """处理HTTP请求并提取用户令牌"""
         logger.debug(
-            f"UserTokenMiddleware.dispatch: ENTERED for request path='{request.url.path}', method='{request.method}'"
+            f"UserTokenMiddleware.dispatch: 进入请求处理，路径='{request.url.path}', 方法='{request.method}'"
         )
         mcp_server_instance = self.mcp_server_ref
         if mcp_server_instance is None:
             logger.debug(
-                "UserTokenMiddleware.dispatch: self.mcp_server_ref is None. Skipping MCP auth logic."
+                "UserTokenMiddleware.dispatch: self.mcp_server_ref为None。跳过MCP身份验证逻辑。"
             )
             return await call_next(request)
 
         mcp_path = mcp_server_instance.settings.streamable_http_path.rstrip("/")
         request_path = request.url.path.rstrip("/")
         logger.debug(
-            f"UserTokenMiddleware.dispatch: Comparing request_path='{request_path}' with mcp_path='{mcp_path}'. Request method='{request.method}'"
+            f"UserTokenMiddleware.dispatch: 比较request_path='{request_path}'与mcp_path='{mcp_path}'。请求方法='{request.method}'"
         )
         if request_path == mcp_path and request.method == "POST":
             auth_header = request.headers.get("Authorization")
@@ -222,19 +227,19 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                 f"UserTokenMiddleware: Path='{request.url.path}', AuthHeader='{mask_sensitive(auth_header)}', ParsedToken(masked)='{token_for_log}', CloudId='{cloud_id_header}'"
             )
 
-            # Extract and save cloudId if provided
+            # 提取并保存cloudId（如果提供）
             if cloud_id_header and cloud_id_header.strip():
                 request.state.user_atlassian_cloud_id = cloud_id_header.strip()
                 logger.debug(
-                    f"UserTokenMiddleware: Extracted cloudId from header: {cloud_id_header.strip()}"
+                    f"UserTokenMiddleware: 从头中提取cloudId: {cloud_id_header.strip()}"
                 )
             else:
                 request.state.user_atlassian_cloud_id = None
                 logger.debug(
-                    "UserTokenMiddleware: No cloudId header provided, will use global config"
+                    "UserTokenMiddleware: 未提供cloudId头，将使用全局配置"
                 )
 
-            # Check for mcp-session-id header for debugging
+            # 检查mcp-session-id头用于调试
             mcp_session_id = request.headers.get("mcp-session-id")
             if mcp_session_id:
                 logger.debug(
@@ -271,10 +276,10 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                 request.state.user_atlassian_token = token
                 request.state.user_atlassian_auth_type = "pat"
                 request.state.user_atlassian_email = (
-                    None  # PATs don't carry email in the token itself
+                    None  # PAT本身不携带邮箱信息
                 )
                 logger.debug(
-                    "UserTokenMiddleware.dispatch: Set request.state for PAT auth."
+                    "UserTokenMiddleware.dispatch: 为PAT身份验证设置request.state。"
                 )
             elif auth_header:
                 logger.warning(
@@ -288,22 +293,23 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                 )
             else:
                 logger.debug(
-                    f"No Authorization header provided for {request.url.path}. Will proceed with global/fallback server configuration if applicable."
+                    f"{request.url.path}未提供Authorization头。如果适用，将使用全局/回退服务器配置继续。"
                 )
         response = await call_next(request)
         logger.debug(
-            f"UserTokenMiddleware.dispatch: EXITED for request path='{request.url.path}'"
+            f"UserTokenMiddleware.dispatch: 退出请求处理，路径='{request.url.path}'"
         )
         return response
 
 
-main_mcp = ConfluenceMCP(name="Confluence MCP", lifespan=main_lifespan)
-main_mcp.mount("confluence", confluence_mcp)
+main_mcp = ConfluenceMCP(name="Confluence MCP", lifespan=main_lifespan)  # 创建主MCP服务器实例
+main_mcp.mount("confluence", confluence_mcp)  # 挂载Confluence MCP服务器
 
 
 @main_mcp.custom_route("/healthz", methods=["GET"], include_in_schema=False)
 async def _health_check_route(request: Request) -> JSONResponse:
+    """健康检查路由端点"""
     return await health_check(request)
 
 
-logger.info("Added /healthz endpoint for Kubernetes probes")
+logger.info("添加了/healthz端点用于Kubernetes探针")

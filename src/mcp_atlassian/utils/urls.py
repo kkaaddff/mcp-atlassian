@@ -1,26 +1,26 @@
-"""URL-related utility functions for MCP Atlassian."""
+"""MCP Atlassian的URL相关实用函数。"""
 
 import re
 from urllib.parse import urlparse
 
 
 def is_atlassian_cloud_url(url: str) -> bool:
-    """Determine if a URL belongs to Atlassian Cloud or Server/Data Center.
+    """确定URL是属于Atlassian Cloud还是Server/Data Center。
 
-    Args:
-        url: The URL to check
+    参数:
+        url: 要检查的URL
 
-    Returns:
-        True if the URL is for an Atlassian Cloud instance, False for Server/Data Center
+    返回:
+        如果URL是Atlassian Cloud实例则返回True，如果是Server/Data Center则返回False
     """
-    # Localhost and IP-based URLs are always Server/Data Center
+    # 本地主机和基于IP的URL始终是Server/Data Center
     if url is None or not url:
         return False
 
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname or ""
 
-    # Check for localhost or IP address
+    # 检查本地主机或IP地址
     if (
         hostname == "localhost"
         or re.match(r"^127\.", hostname)
@@ -30,7 +30,7 @@ def is_atlassian_cloud_url(url: str) -> bool:
     ):
         return False
 
-    # The standard check for Atlassian cloud domains
+    # Atlassian云域名的标准检查
     return (
         ".atlassian.net" in hostname
         or ".jira.com" in hostname

@@ -1,4 +1,4 @@
-"""SSL-related utility functions for MCP Atlassian."""
+"""MCP Atlassian的SSL相关实用函数。"""
 
 import logging
 import ssl
@@ -13,36 +13,35 @@ logger = logging.getLogger("mcp-atlassian")
 
 
 class SSLIgnoreAdapter(HTTPAdapter):
-    """HTTP adapter that ignores SSL verification.
+    """忽略SSL验证的HTTP适配器。
 
-    A custom transport adapter that disables SSL certificate verification for specific domains.
-    This implementation ensures that both verify_mode is set to CERT_NONE and check_hostname
-    is disabled, which is required for properly ignoring SSL certificates.
+    一个自定义传输适配器，为特定域名禁用SSL证书验证。
+    此实现确保verify_mode设置为CERT_NONE且check_hostname被禁用，
+    这是正确忽略SSL证书的必要条件。
 
-    This adapter also enables legacy SSL renegotiation which may be required for some older servers.
-    Note that this reduces security and should only be used when absolutely necessary.
+    此适配器还启用了传统SSL重新协商，某些旧版服务器可能需要此功能。
+    请注意，这会降低安全性，只应在绝对必要时使用。
     """
 
     def init_poolmanager(
         self, connections: int, maxsize: int, block: bool = False, **pool_kwargs: Any
     ) -> None:
-        """Initialize the connection pool manager with SSL verification disabled.
+        """初始化禁用SSL验证的连接池管理器。
 
-        This method is called when the adapter is created, and it's the proper place to
-        disable SSL verification completely.
+        创建适配器时会调用此方法，这是完全禁用SSL验证的正确位置。
 
-        Args:
-            connections: Number of connections to save in the pool
-            maxsize: Maximum number of connections in the pool
-            block: Whether to block when the pool is full
-            pool_kwargs: Additional arguments for the pool manager
+        参数:
+            connections: 在池中保存的连接数
+            maxsize: 池中的最大连接数
+            block: 当池满时是否阻塞
+            pool_kwargs: 池管理器的附加参数
         """
-        # Configure SSL context to disable verification completely
+        # 配置SSL上下文以完全禁用验证
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
 
-        # Enable legacy SSL renegotiation
+        # 启用传统SSL重新协商
         context.options |= 0x4  # SSL_OP_LEGACY_SERVER_CONNECT
         context.options |= 0x40000  # SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
 
@@ -55,16 +54,16 @@ class SSLIgnoreAdapter(HTTPAdapter):
         )
 
     def cert_verify(self, conn: Any, url: str, verify: bool, cert: Any | None) -> None:
-        """Override cert verification to disable SSL verification.
+        """覆盖证书验证以禁用SSL验证。
 
-        This method is still included for backward compatibility, but the main
-        SSL disabling happens in init_poolmanager.
+        此方法仍包含在代码中是为了向后兼容，但主要的
+        SSL禁用操作发生在init_poolmanager中。
 
-        Args:
-            conn: The connection
-            url: The URL being requested
-            verify: The original verify parameter (ignored)
-            cert: Client certificate path
+        参数:
+            conn: 连接
+            url: 请求的URL
+            verify: 原始verify参数（被忽略）
+            cert: 客户端证书路径
         """
         super().cert_verify(conn, url, verify=False, cert=cert)
 
@@ -72,27 +71,26 @@ class SSLIgnoreAdapter(HTTPAdapter):
 def configure_ssl_verification(
     service_name: str, url: str, session: Session, ssl_verify: bool
 ) -> None:
-    """Configure SSL verification for a specific service.
+    """为特定服务配置SSL验证。
 
-    If SSL verification is disabled, this function will configure the session
-    to use a custom SSL adapter that bypasses certificate validation for the
-    service's domain.
+    如果禁用SSL验证，此函数将配置会话以使用自定义SSL适配器，
+    该适配器绕过服务域名的证书验证。
 
-    Args:
-        service_name: Name of the service for logging (e.g., "Confluence", "Jira")
-        url: The base URL of the service
-        session: The requests session to configure
-        ssl_verify: Whether SSL verification should be enabled
+    参数:
+        service_name: 用于日志记录的服务名称（例如"Confluence"、"Jira"）
+        url: 服务的基础URL
+        session: 要配置的请求会话
+        ssl_verify: 是否应启用SSL验证
     """
     if not ssl_verify:
         logger.warning(
-            f"{service_name} SSL verification disabled. This is insecure and should only be used in testing environments."
+            f"{service_name} SSL验证已禁用。这不安全，只应在测试环境中使用。"
         )
 
-        # Get the domain from the configured URL
+        # 从配置的URL获取域名
         domain = urlparse(url).netloc
 
-        # Mount the adapter to handle requests to this domain
+        # 挂载适配器以处理对此域名的请求
         adapter = SSLIgnoreAdapter()
         session.mount(f"https://{domain}", adapter)
         session.mount(f"http://{domain}", adapter)

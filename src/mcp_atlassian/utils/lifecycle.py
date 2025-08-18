@@ -1,4 +1,4 @@
-"""Lifecycle management utilities for graceful shutdown and signal handling."""
+"""用于优雅关闭和信号处理的生命周期管理实用函数。"""
 
 import logging
 import signal
@@ -13,62 +13,62 @@ _shutdown_event = threading.Event()
 
 
 def setup_signal_handlers() -> None:
-    """Set up signal handlers for graceful shutdown.
+    """设置用于优雅关闭的信号处理程序。
 
-    Registers handlers for SIGTERM, SIGINT, and SIGPIPE (if available) to ensure
-    the application shuts down cleanly when receiving termination signals.
+    注册SIGTERM、SIGINT和SIGPIPE（如果可用）的处理程序，以确保
+    应用程序在接收到终止信号时能够干净地关闭。
 
-    This is particularly important for Docker containers running with the -i flag,
-    which need to properly handle shutdown signals from parent processes.
+   这对于运行-i标志的Docker容器特别重要，
+    需要正确处理来自父进程的关闭信号。
     """
 
     def signal_handler(signum: int, frame: Any) -> None:
-        """Handle shutdown signals gracefully.
+        """优雅地处理关闭信号。
 
-        Uses event-based shutdown to avoid signal safety issues.
-        Signal handlers should be minimal and avoid complex operations.
+        使用基于事件的关闭以避免信号安全问题。
+        信号处理程序应该尽可能简单，避免复杂操作。
         """
-        # Only safe operations in signal handlers - set the shutdown event
+        # 信号处理程序中只允许安全操作 - 设置关闭事件
         _shutdown_event.set()
 
-    # Register signal handlers
+    # 注册信号处理程序
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Handle SIGPIPE which occurs when parent process closes the pipe
+    # 处理父进程关闭管道时发生的SIGPIPE
     try:
         signal.signal(signal.SIGPIPE, signal_handler)
         logger.debug("SIGPIPE handler registered")
     except AttributeError:
-        # SIGPIPE may not be available on all platforms (e.g., Windows)
+        # SIGPIPE在所有平台上都不可用（例如Windows）
         logger.debug("SIGPIPE not available on this platform")
 
 
 def ensure_clean_exit() -> None:
-    """Ensure all output streams are flushed before exit.
+    """确保退出前刷新所有输出流。
 
-    This is important for containerized environments where output might be
-    buffered and could be lost if not properly flushed before exit.
+    对于容器化环境这很重要，因为输出可能会被缓冲，
+    如果退出前没有正确刷新可能会丢失。
 
-    Handles cases where streams may already be closed by the parent process,
-    particularly on Windows or when run as a child process.
+    处理流可能已被父进程关闭的情况，
+    特别是在Windows上或作为子进程运行时。
     """
-    logger.info("Server stopped, flushing output streams...")
+    logger.info("服务器已停止，正在刷新输出流...")
 
     # Safely flush stdout
     try:
         if hasattr(sys.stdout, "closed") and not sys.stdout.closed:
             sys.stdout.flush()
     except (ValueError, OSError, AttributeError) as e:
-        # Stream might be closed or redirected
-        logger.debug(f"Could not flush stdout: {e}")
+        # 流可能已关闭或被重定向
+        logger.debug(f"无法刷新stdout: {e}")
 
     # Safely flush stderr
     try:
         if hasattr(sys.stderr, "closed") and not sys.stderr.closed:
             sys.stderr.flush()
     except (ValueError, OSError, AttributeError) as e:
-        # Stream might be closed or redirected
-        logger.debug(f"Could not flush stderr: {e}")
+        # 流可能已关闭或被重定向
+        logger.debug(f"无法刷新stderr: {e}")
 
-    logger.debug("Output streams flushed, exiting gracefully")
+    logger.debug("输出流已刷新，正在优雅退出")

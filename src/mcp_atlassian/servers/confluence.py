@@ -1,4 +1,4 @@
-"""Confluence FastMCP server instance and tool definitions."""
+"""Confluence FastMCP服务器实例和工具定义。"""
 
 import json
 import logging
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 confluence_mcp = FastMCP(
     name="Confluence MCP Service",
-    description="Provides tools for interacting with Atlassian Confluence.",
+    description="提供与Atlassian Confluence交互的工具。",
 )
 
 
@@ -73,16 +73,16 @@ async def search(
     """Search Confluence content using simple terms or CQL.
 
     Args:
-        ctx: The FastMCP context.
-        query: Search query - can be simple text or a CQL query string.
-        limit: Maximum number of results (1-50).
-        spaces_filter: Comma-separated list of space keys to filter by.
+        ctx: FastMCP上下文。
+        query: 搜索查询 - 可以是简单文本或CQL查询字符串。
+        limit: 最大结果数（1-50）。
+        spaces_filter: 用于过滤的逗号分隔的空间键列表。
 
     Returns:
-        JSON string representing a list of simplified Confluence page objects.
+        表示简化的Confluence页面对象列表的JSON字符串。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
-    # Check if the query is a simple search term or already a CQL query
+    # 检查查询是简单搜索词还是已经是CQL查询
     if query and not any(
         x in query for x in ["=", "~", ">", "<", " AND ", " OR ", "currentUser()"]
     ):
@@ -90,15 +90,15 @@ async def search(
         try:
             query = f'siteSearch ~ "{original_query}"'
             logger.info(
-                f"Converting simple search term to CQL using siteSearch: {query}"
+                f"将简单搜索词转换为使用siteSearch的CQL: {query}"
             )
             pages = confluence_fetcher.search(
                 query, limit=limit, spaces_filter=spaces_filter
             )
         except Exception as e:
-            logger.warning(f"siteSearch failed ('{e}'), falling back to text search.")
+            logger.warning(f"siteSearch失败（'{e}'），回退到文本搜索。")
             query = f'text ~ "{original_query}"'
-            logger.info(f"Falling back to text search with CQL: {query}")
+            logger.info(f"回退到使用CQL的文本搜索: {query}")
             pages = confluence_fetcher.search(
                 query, limit=limit, spaces_filter=spaces_filter
             )
@@ -165,15 +165,15 @@ async def get_page(
     """Get content of a specific Confluence page by its ID, or by its title and space key.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: Confluence page ID. If provided, 'title' and 'space_key' are ignored.
-        title: The exact title of the page. Must be used with 'space_key'.
-        space_key: The key of the space. Must be used with 'title'.
-        include_metadata: Whether to include page metadata.
-        convert_to_markdown: Convert content to markdown (true) or keep raw HTML (false).
+        ctx: FastMCP上下文。
+        page_id: Confluence页面ID。如果提供，将忽略'title'和'space_key'。
+        title: 页面的确切标题。必须与'space_key'一起使用。
+        space_key: 空间的键。必须与'title'一起使用。
+        include_metadata: 是否包含页面元数据。
+        convert_to_markdown: 将内容转换为markdown（true）或保持原始HTML格式（false）。
 
     Returns:
-        JSON string representing the page content and/or metadata, or an error if not found or parameters are invalid.
+        表示页面内容和/或元数据的JSON字符串，如果未找到或参数无效则返回错误。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     page_object = None
@@ -181,16 +181,16 @@ async def get_page(
     if page_id:
         if title or space_key:
             logger.warning(
-                "page_id was provided; title and space_key parameters will be ignored."
+                "提供了page_id；title和space_key参数将被忽略。"
             )
         try:
             page_object = confluence_fetcher.get_page_content(
                 page_id, convert_to_markdown=convert_to_markdown
             )
         except Exception as e:
-            logger.error(f"Error fetching page by ID '{page_id}': {e}")
+            logger.error(f"通过ID'{page_id}'获取页面时出错: {e}")
             return json.dumps(
-                {"error": f"Failed to retrieve page by ID '{page_id}': {e}"},
+                {"error": f"通过ID'{page_id}'检索页面失败: {e}"},
                 indent=2,
                 ensure_ascii=False,
             )
@@ -201,19 +201,19 @@ async def get_page(
         if not page_object:
             return json.dumps(
                 {
-                    "error": f"Page with title '{title}' not found in space '{space_key}'."
+                    "error": f"在空间'{space_key}'中未找到标题为'{title}'的页面。"
                 },
                 indent=2,
                 ensure_ascii=False,
             )
     else:
         raise ValueError(
-            "Either 'page_id' OR both 'title' and 'space_key' must be provided."
+            "必须提供'page_id'或同时提供'title'和'space_key'。"
         )
 
     if not page_object:
         return json.dumps(
-            {"error": "Page not found with the provided identifiers."},
+            {"error": "使用提供的标识符未找到页面。"},
             indent=2,
             ensure_ascii=False,
         )
@@ -273,16 +273,16 @@ async def get_page_children(
     """Get child pages of a specific Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        parent_id: The ID of the parent page.
-        expand: Fields to expand.
-        limit: Maximum number of child pages.
-        include_content: Whether to include page content.
-        convert_to_markdown: Convert content to markdown if include_content is true.
-        start: Starting index for pagination.
+        ctx: FastMCP上下文。
+        parent_id: 父页面的ID。
+        expand: 要展开的字段。
+        limit: 子页面的最大数量。
+        include_content: 是否包含页面内容。
+        convert_to_markdown: 如果include_content为true，将内容转换为markdown。
+        start: 分页的起始索引。
 
     Returns:
-        JSON string representing a list of child page objects.
+        表示子页面对象列表的JSON字符串。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     if include_content and "body" not in expand:
@@ -306,10 +306,10 @@ async def get_page_children(
         }
     except Exception as e:
         logger.error(
-            f"Error getting/processing children for page ID {parent_id}: {e}",
+            f"获取/处理页面ID {parent_id}的子页面时出错: {e}",
             exc_info=True,
         )
-        result = {"error": f"Failed to get child pages: {e}"}
+        result = {"error": f"获取子页面失败: {e}"}
 
     return json.dumps(result, indent=2, ensure_ascii=False)
 
@@ -331,11 +331,11 @@ async def get_comments(
     """Get comments for a specific Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: Confluence page ID.
+        ctx: FastMCP上下文。
+        page_id: Confluence页面ID。
 
     Returns:
-        JSON string representing a list of comment objects.
+        表示评论对象列表的JSON字符串。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     comments = confluence_fetcher.get_page_comments(page_id)
@@ -360,11 +360,11 @@ async def get_labels(
     """Get labels for a specific Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: Confluence page ID.
+        ctx: FastMCP上下文。
+        page_id: Confluence页面ID。
 
     Returns:
-        JSON string representing a list of label objects.
+        表示标签对象列表的JSON字符串。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     labels = confluence_fetcher.get_page_labels(page_id)
@@ -382,15 +382,15 @@ async def add_label(
     """Add label to an existing Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: The ID of the page to update.
-        name: The name of the label.
+        ctx: FastMCP上下文。
+        page_id: 要更新的页面ID。
+        name: 标签的名称。
 
     Returns:
-        JSON string representing the updated list of label objects for the page.
+        表示页面更新后的标签对象列表的JSON字符串。
 
     Raises:
-        ValueError: If in read-only mode or Confluence client is unavailable.
+        ValueError: 如果处于只读模式或Confluence客户端不可用。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     labels = confluence_fetcher.add_page_label(page_id, name)
@@ -441,35 +441,35 @@ async def create_page(
     """Create a new Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        space_key: The key of the space.
-        title: The title of the page.
-        content: The content of the page (format depends on content_format).
-        parent_id: Optional parent page ID.
-        content_format: The format of the content ('markdown', 'wiki', or 'storage').
-        enable_heading_anchors: Whether to enable heading anchors (markdown only).
+        ctx: FastMCP上下文。
+        space_key: 空间的键。
+        title: 页面的标题。
+        content: 页面的内容（格式取决于content_format）。
+        parent_id: 可选的父页面ID。
+        content_format: 内容的格式（'markdown'、'wiki'或'storage'）。
+        enable_heading_anchors: 是否启用标题锚点（仅限markdown）。
 
     Returns:
-        JSON string representing the created page object.
+        表示创建的页面对象的JSON字符串。
 
     Raises:
-        ValueError: If in read-only mode, Confluence client is unavailable, or invalid content_format.
+        ValueError: 如果处于只读模式、Confluence客户端不可用或content_format无效。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
 
-    # Validate content_format
+    # 验证content_format
     if content_format not in ["markdown", "wiki", "storage"]:
         raise ValueError(
-            f"Invalid content_format: {content_format}. Must be 'markdown', 'wiki', or 'storage'"
+            f"无效的content_format: {content_format}。必须是'markdown'、'wiki'或'storage'"
         )
 
-    # Determine parameters based on content format
+    # 根据内容格式确定参数
     if content_format == "markdown":
         is_markdown = True
-        content_representation = None  # Will be converted to storage
+        content_representation = None  # 将转换为存储格式
     else:
         is_markdown = False
-        content_representation = content_format  # Pass 'wiki' or 'storage' directly
+        content_representation = content_format  # 直接传递'wiki'或'storage'
 
     page = confluence_fetcher.create_page(
         space_key=space_key,
@@ -531,37 +531,37 @@ async def update_page(
     """Update an existing Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: The ID of the page to update.
-        title: The new title of the page.
-        content: The new content of the page (format depends on content_format).
-        is_minor_edit: Whether this is a minor edit.
-        version_comment: Optional comment for this version.
-        parent_id: Optional new parent page ID.
-        content_format: The format of the content ('markdown', 'wiki', or 'storage').
-        enable_heading_anchors: Whether to enable heading anchors (markdown only).
+        ctx: FastMCP上下文。
+        page_id: 要更新的页面ID。
+        title: 页面的新标题。
+        content: 页面的新内容（格式取决于content_format）。
+        is_minor_edit: 是否为小编辑。
+        version_comment: 此版本的可选注释。
+        parent_id: 可选的新父页面ID。
+        content_format: 内容的格式（'markdown'、'wiki'或'storage'）。
+        enable_heading_anchors: 是否启用标题锚点（仅限markdown）。
 
     Returns:
-        JSON string representing the updated page object.
+        表示更新的页面对象的JSON字符串。
 
     Raises:
-        ValueError: If Confluence client is not configured, available, or invalid content_format.
+        ValueError: 如果Confluence客户端未配置、不可用或content_format无效。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
 
-    # Validate content_format
+    # 验证content_format
     if content_format not in ["markdown", "wiki", "storage"]:
         raise ValueError(
-            f"Invalid content_format: {content_format}. Must be 'markdown', 'wiki', or 'storage'"
+            f"无效的content_format: {content_format}。必须是'markdown'、'wiki'或'storage'"
         )
 
-    # Determine parameters based on content format
+    # 根据内容格式确定参数
     if content_format == "markdown":
         is_markdown = True
-        content_representation = None  # Will be converted to storage
+        content_representation = None  # 将转换为存储格式
     else:
         is_markdown = False
-        content_representation = content_format  # Pass 'wiki' or 'storage' directly
+        content_representation = content_format  # 直接传递'wiki'或'storage'
 
     updated_page = confluence_fetcher.update_page(
         page_id=page_id,
@@ -593,14 +593,14 @@ async def delete_page(
     """Delete an existing Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: The ID of the page to delete.
+        ctx: FastMCP上下文。
+        page_id: 要删除的页面ID。
 
     Returns:
-        JSON string indicating success or failure.
+        表示成功或失败的JSON字符串。
 
     Raises:
-        ValueError: If Confluence client is not configured or available.
+        ValueError: 如果Confluence客户端未配置或不可用。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     try:
@@ -616,10 +616,10 @@ async def delete_page(
                 "message": f"Unable to delete page {page_id}. API request completed but deletion unsuccessful.",
             }
     except Exception as e:
-        logger.error(f"Error deleting Confluence page {page_id}: {str(e)}")
+        logger.error(f"删除Confluence页面{page_id}时出错: {str(e)}")
         response = {
             "success": False,
-            "message": f"Error deleting page {page_id}",
+            "message": f"删除页面{page_id}时出错",
             "error": str(e),
         }
 
@@ -640,15 +640,15 @@ async def add_comment(
     """Add a comment to a Confluence page.
 
     Args:
-        ctx: The FastMCP context.
-        page_id: The ID of the page to add a comment to.
-        content: The comment content in Markdown format.
+        ctx: FastMCP上下文。
+        page_id: 要添加评论的页面ID。
+        content: Markdown格式的评论内容。
 
     Returns:
-        JSON string representing the created comment.
+        表示创建的评论的JSON字符串。
 
     Raises:
-        ValueError: If in read-only mode or Confluence client is unavailable.
+        ValueError: 如果处于只读模式或Confluence客户端不可用。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
     try:
@@ -666,10 +666,10 @@ async def add_comment(
                 "message": f"Unable to add comment to page {page_id}. API request completed but comment creation unsuccessful.",
             }
     except Exception as e:
-        logger.error(f"Error adding comment to Confluence page {page_id}: {str(e)}")
+        logger.error(f"向Confluence页面{page_id}添加评论时出错: {str(e)}")
         response = {
             "success": False,
-            "message": f"Error adding comment to page {page_id}",
+            "message": f"向页面{page_id}添加评论时出错",
             "error": str(e),
         }
 
@@ -704,42 +704,42 @@ async def search_user(
     """Search Confluence users using CQL.
 
     Args:
-        ctx: The FastMCP context.
-        query: Search query - a CQL query string for user search.
-        limit: Maximum number of results (1-50).
+        ctx: FastMCP上下文。
+        query: 搜索查询 - 用于用户搜索的CQL查询字符串。
+        limit: 最大结果数（1-50）。
 
     Returns:
-        JSON string representing a list of simplified Confluence user search result objects.
+        表示简化的Confluence用户搜索结果对象列表的JSON字符串。
     """
     confluence_fetcher = await get_confluence_fetcher(ctx)
 
-    # If the query doesn't look like CQL, wrap it as a user fullname search
+    # 如果查询看起来不像CQL，将其包装为用户全名搜索
     if query and not any(
         x in query for x in ["=", "~", ">", "<", " AND ", " OR ", "user."]
     ):
-        # Simple search term - search by fullname
+        # 简单搜索词 - 按全名搜索
         query = f'user.fullname ~ "{query}"'
-        logger.info(f"Converting simple search term to user CQL: {query}")
+        logger.info(f"将简单搜索词转换为用户CQL: {query}")
 
     try:
         user_results = confluence_fetcher.search_user(query, limit=limit)
         search_results = [user.to_simplified_dict() for user in user_results]
         return json.dumps(search_results, indent=2, ensure_ascii=False)
     except MCPAtlassianAuthenticationError as e:
-        logger.error(f"Authentication error during user search: {e}", exc_info=False)
+        logger.error(f"用户搜索期间身份验证错误: {e}", exc_info=False)
         return json.dumps(
             {
-                "error": "Authentication failed. Please check your credentials.",
+                "error": "身份验证失败。请检查您的凭据。",
                 "details": str(e),
             },
             indent=2,
             ensure_ascii=False,
         )
     except Exception as e:
-        logger.error(f"Error searching users: {str(e)}")
+        logger.error(f"搜索用户时出错: {str(e)}")
         return json.dumps(
             {
-                "error": f"An unexpected error occurred while searching for users: {str(e)}"
+                "error": f"搜索用户时发生意外错误: {str(e)}"
             },
             indent=2,
             ensure_ascii=False,

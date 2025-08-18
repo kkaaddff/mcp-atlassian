@@ -1,4 +1,4 @@
-"""Utility functions for date operations."""
+"""日期操作的实用函数。"""
 
 import logging
 from datetime import datetime, timezone
@@ -10,18 +10,18 @@ logger = logging.getLogger("mcp-atlassian")
 
 def parse_date(date_str: str | int | None) -> datetime | None:
     """
-    Parse a date string from any format to a datetime object for type consistency.
+    将日期字符串从任何格式解析为datetime对象以实现类型一致性。
 
-    The input string `date_str` accepts:
+    输入字符串`date_str`接受：
     - None
-    - Epoch timestamp (only contains digits and is in milliseconds)
-    - Other formats supported by `dateutil.parser` (ISO 8601, RFC 3339, etc.)
+    - 纪元时间戳（仅包含数字且为毫秒）
+    - `dateutil.parser`支持的其他格式（ISO 8601、RFC 3339等）
 
-    Args:
-        date_str: Date string
+    参数:
+        date_str: 日期字符串
 
-    Returns:
-        Parsed date string or None if date_str is None / empty string
+    返回:
+        解析后的日期字符串，如果date_str为None/空字符串则返回None
     """
 
     if not date_str:

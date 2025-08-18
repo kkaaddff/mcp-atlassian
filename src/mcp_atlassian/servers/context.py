@@ -10,9 +10,8 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class MainAppContext:
     """
-    Context holding fully configured Confluence configuration
-    loaded from environment variables at server startup.
-    These configurations include any global/default authentication details.
+    上下文，保存服务器启动时从环境变量加载的完全配置的Confluence配置。
+    这些配置包括任何全局/默认身份验证详细信息。
     """
 
     full_confluence_config: ConfluenceConfig | None = None

@@ -1,9 +1,8 @@
 """
-Base models and utility classes for the MCP Atlassian API models.
+MCP Atlassian API模型的基础模型和实用类。
 
-This module provides base classes and mixins that are used by the
-Jira and Confluence models to ensure consistent behavior and reduce
-code duplication.
+此模块提供了由Jira和Confluence模型使用的基础类和混入类，
+以确保一致的行为并减少代码重复。
 """
 
 from datetime import datetime
@@ -19,65 +18,64 @@ T = TypeVar("T", bound="ApiModel")
 
 class ApiModel(BaseModel):
     """
-    Base model for all API models with common conversion methods.
+    所有API模型的基础模型，具有通用转换方法。
 
-    This provides a standard interface for converting API responses
-    to models and for converting models to simplified dictionaries
-    for API responses.
+    这提供了将API响应转换为模型以及将模型转换为简化
+    字典用于API响应的标准接口。
     """
 
     @classmethod
     def from_api_response(cls: type[T], data: dict[str, Any], **kwargs: Any) -> T:
         """
-        Convert an API response to a model instance.
+        将API响应转换为模型实例。
 
-        Args:
-            data: The API response data
-            **kwargs: Additional context parameters
+        参数:
+            data: API响应数据
+            **kwargs: 附加上下文参数
 
-        Returns:
-            An instance of the model
+        返回:
+            模型实例
 
-        Raises:
-            NotImplementedError: If the subclass does not implement this method
+        引发:
+            NotImplementedError: 如果子类未实现此方法
         """
         raise NotImplementedError("Subclasses must implement from_api_response")
 
     def to_simplified_dict(self) -> dict[str, Any]:
         """
-        Convert the model to a simplified dictionary for API responses.
+        将模型转换为用于API响应的简化字典。
 
-        Returns:
-            A dictionary with only the essential fields for API responses
+        返回:
+            仅包含API响应必需字段的字典
         """
         return self.model_dump(exclude_none=True)
 
 
 class TimestampMixin:
     """
-    Mixin for handling Atlassian API timestamp formats.
+    用于处理Atlassian API时间戳格式的混入类。
     """
 
     @staticmethod
     def format_timestamp(timestamp: str | None) -> str:
         """
-        Format an Atlassian timestamp to a human-readable format.
+        将Atlassian时间戳格式化为人类可读格式。
 
-        Args:
-            timestamp: An ISO 8601 timestamp string
+        参数:
+            timestamp: ISO 8601时间戳字符串
 
-        Returns:
-            A formatted date string or empty string if the input is invalid
+        返回:
+            格式化的日期字符串，如果输入无效则返回空字符串
         """
         if not timestamp:
             return EMPTY_STRING
 
         try:
-            # Parse ISO 8601 format like "2024-01-01T10:00:00.000+0000"
-            # Convert Z format to +00:00 for compatibility with fromisoformat
+            # 解析ISO 8601格式，如"2024-01-01T10:00:00.000+0000"
+            # 将Z格式转换为+00:00以与fromisoformat兼容
             ts = timestamp.replace("Z", "+00:00")
 
-            # Handle timezone format without colon (+0000 -> +00:00)
+            # 处理不带冒号的时区格式（+0000 -> +00:00）
             if "+" in ts and ":" not in ts[-5:]:
                 tz_pos = ts.rfind("+")
                 if tz_pos != -1 and len(ts) >= tz_pos + 5:
@@ -95,22 +93,22 @@ class TimestampMixin:
     @staticmethod
     def is_valid_timestamp(timestamp: str | None) -> bool:
         """
-        Check if a string is a valid ISO 8601 timestamp.
+        检查字符串是否为有效的ISO 8601时间戳。
 
-        Args:
-            timestamp: The string to check
+        参数:
+            timestamp: 要检查的字符串
 
-        Returns:
-            True if the string is a valid timestamp, False otherwise
+        返回:
+            如果字符串是有效时间戳则返回True，否则返回False
         """
         if not timestamp:
             return False
 
         try:
-            # Convert Z format to +00:00 for compatibility with fromisoformat
+            # 将Z格式转换为+00:00以与fromisoformat兼容
             ts = timestamp.replace("Z", "+00:00")
 
-            # Handle timezone format without colon (+0000 -> +00:00)
+            # 处理不带冒号的时区格式（+0000 -> +00:00）
             if "+" in ts and ":" not in ts[-5:]:
                 tz_pos = ts.rfind("+")
                 if tz_pos != -1 and len(ts) >= tz_pos + 5:

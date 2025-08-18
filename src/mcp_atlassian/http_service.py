@@ -1,4 +1,4 @@
-"""HTTP Service wrapper for Confluence with configurable base URL and request-based authentication."""
+"""Confluence 的 HTTP 服务包装器，具有可配置的基础 URL 和基于请求的认证。"""
 
 import logging
 from typing import Any, Dict, Optional
@@ -13,69 +13,69 @@ logger = logging.getLogger("mcp-confluence.http_service")
 
 
 class ConfluenceAuthRequest(BaseModel):
-    """Request model for Confluence operations with authentication."""
+    """具有认证的 Confluence 操作的请求模型。"""
     
-    base_url: str = Field(..., description="Base URL for Confluence instance")
-    auth_type: str = Field(..., description="Authentication type: 'basic' or 'pat'")
-    username: Optional[str] = Field(None, description="Username for basic auth")
-    api_token: Optional[str] = Field(None, description="API token for basic auth")
-    personal_token: Optional[str] = Field(None, description="Personal access token for Server/DC")
-    operation: str = Field(..., description="Operation to perform")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the operation")
+    base_url: str = Field(..., description="Confluence 实例的基础 URL")
+    auth_type: str = Field(..., description="认证类型：'basic' 或 'pat'")
+    username: Optional[str] = Field(None, description="基础认证的用户名")
+    api_token: Optional[str] = Field(None, description="基础认证的 API 令牌")
+    personal_token: Optional[str] = Field(None, description="Server/DC 的个人访问令牌")
+    operation: str = Field(..., description="要执行的操作")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="操作的参数")
 
 
 class ConfluenceAuthService:
-    """Service for handling Confluence operations with request-based authentication."""
+    """用于处理具有基于请求认证的 Confluence 操作的服务。"""
     
     def __init__(self):
         self.logger = logging.getLogger("mcp-confluence.auth_service")
     
     async def create_config_from_request(self, request: ConfluenceAuthRequest) -> ConfluenceConfig:
-        """Create ConfluenceConfig from request parameters."""
+        """根据请求参数创建 ConfluenceConfig。"""
         
         
         if request.auth_type == "basic":
             if not request.username or not request.api_token:
-                raise HTTPException(status_code=400, detail="Username and API token are required for basic auth")
+                raise HTTPException(status_code=400, detail="基础认证需要用户名和 API 令牌")
         
         elif request.auth_type == "pat":
             if not request.personal_token:
-                raise HTTPException(status_code=400, detail="Personal token is required for PAT authentication")
+                raise HTTPException(status_code=400, detail="PAT 认证需要个人令牌")
         
         elif request.auth_type == "pat":
             if not request.personal_token:
-                raise HTTPException(status_code=400, detail="Personal token is required for PAT authentication")
+                raise HTTPException(status_code=400, detail="PAT 认证需要个人令牌")
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported auth type: {request.auth_type}")
+            raise HTTPException(status_code=400, detail=f"不支持的认证类型：{request.auth_type}")
         
-        # Create ConfluenceConfig
+        # 创建 ConfluenceConfig
         config = ConfluenceConfig(
             url=request.base_url,
             auth_type=request.auth_type,
             username=request.username,
             api_token=request.api_token,
             personal_token=request.personal_token,
-            ssl_verify=True,  # Default to SSL verification
+            ssl_verify=True,  # 默认 SSL 验证
         )
         
-        # Validate configuration
+        # 验证配置
         if not config.is_auth_configured():
-            raise HTTPException(status_code=400, detail="Authentication configuration is incomplete")
+            raise HTTPException(status_code=400, detail="认证配置不完整")
         
         return config
     
     async def execute_operation(self, config: ConfluenceConfig, operation: str, parameters: Dict[str, Any]) -> Any:
-        """Execute Confluence operation with the given configuration."""
+        """使用给定的配置执行 Confluence 操作。"""
         
         try:
-            # Create ConfluenceFetcher with the configuration
+            # 使用配置创建 ConfluenceFetcher
             fetcher = ConfluenceFetcher(config=config)
             
-            # Execute the requested operation
+            # 执行请求的操作
             if operation == "get_page":
                 page_id = parameters.get("page_id")
                 if not page_id:
-                    raise HTTPException(status_code=400, detail="page_id is required for get_page operation")
+                    raise HTTPException(status_code=400, detail="get_page 操作需要 page_id")
                 return await fetcher.get_page_by_id(page_id)
             
             elif operation == "search_pages":
@@ -87,7 +87,7 @@ class ConfluenceAuthService:
             elif operation == "get_space":
                 space_key = parameters.get("space_key")
                 if not space_key:
-                    raise HTTPException(status_code=400, detail="space_key is required for get_space operation")
+                    raise HTTPException(status_code=400, detail="get_space 操作需要 space_key")
                 return await fetcher.get_space(space_key)
             
             elif operation == "list_spaces":
@@ -101,7 +101,7 @@ class ConfluenceAuthService:
                 parent_id = parameters.get("parent_id")
                 
                 if not all([space_key, title, content]):
-                    raise HTTPException(status_code=400, detail="space_key, title, and content are required for create_page operation")
+                    raise HTTPException(status_code=400, detail="create_page 操作需要 space_key、title 和 content")
                 
                 return await fetcher.create_page(space_key, title, content, parent_id)
             
@@ -112,38 +112,38 @@ class ConfluenceAuthService:
                 version = parameters.get("version")
                 
                 if not page_id:
-                    raise HTTPException(status_code=400, detail="page_id is required for update_page operation")
+                    raise HTTPException(status_code=400, detail="update_page 操作需要 page_id")
                 
                 return await fetcher.update_page(page_id, title, content, version)
             
             else:
-                raise HTTPException(status_code=400, detail=f"Unsupported operation: {operation}")
+                raise HTTPException(status_code=400, detail=f"不支持的操作：{operation}")
         
         except Exception as e:
-            self.logger.error(f"Error executing operation {operation}: {e}")
-            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+            self.logger.error(f"执行操作 {operation} 时出错：{e}")
+            raise HTTPException(status_code=500, detail=f"内部服务器错误：{str(e)}")
 
 
-# Initialize FastAPI app
+# 初始化 FastAPI 应用
 app = FastAPI(
-    title="Confluence HTTP Service",
-    description="HTTP service for Confluence operations with configurable base URL and request-based authentication",
+    title="Confluence HTTP 服务",
+    description="具有可配置基础 URL 和基于请求认证的 Confluence 操作 HTTP 服务",
     version="1.0.0"
 )
 
-# Initialize auth service
+# 初始化认证服务
 auth_service = ConfluenceAuthService()
 
 
 @app.post("/confluence/execute")
 async def execute_confluence_operation(request: ConfluenceAuthRequest):
-    """Execute a Confluence operation with the provided authentication."""
+    """使用提供的认证执行 Confluence 操作。"""
     
     try:
-        # Create configuration from request
+        # 从请求创建配置
         config = await auth_service.create_config_from_request(request)
         
-        # Execute the operation
+        # 执行操作
         result = await auth_service.execute_operation(config, request.operation, request.parameters)
         
         return JSONResponse(content={"success": True, "data": result})
@@ -151,26 +151,26 @@ async def execute_confluence_operation(request: ConfluenceAuthRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in execute_confluence_operation: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(f"execute_confluence_operation 中出现意外错误：{e}")
+        raise HTTPException(status_code=500, detail=f"内部服务器错误：{str(e)}")
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """健康检查端点。"""
     return {"status": "healthy", "service": "confluence-http-service"}
 
 
 @app.get("/")
 async def root():
-    """Root endpoint with service information."""
+    """包含服务信息的根端点。"""
     return {
-        "service": "Confluence HTTP Service",
+        "service": "Confluence HTTP 服务",
         "version": "1.0.0",
-        "description": "HTTP service for Confluence operations with configurable base URL and request-based authentication",
+        "description": "具有可配置基础 URL 和基于请求认证的 Confluence 操作 HTTP 服务",
         "endpoints": {
-            "POST /confluence/execute": "Execute Confluence operations",
-            "GET /health": "Health check",
+            "POST /confluence/execute": "执行 Confluence 操作",
+            "GET /health": "健康检查",
         }
     }
 

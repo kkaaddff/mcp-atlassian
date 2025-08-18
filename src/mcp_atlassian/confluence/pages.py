@@ -1,4 +1,4 @@
-"""Module for Confluence page operations."""
+"""Confluence页面操作模块。"""
 
 import logging
 
@@ -13,29 +13,29 @@ logger = logging.getLogger("mcp-atlassian")
 
 
 class PagesMixin(ConfluenceClient):
-    """Mixin for Confluence page operations."""
+    """Confluence页面操作的混入类。"""
 
     def get_page_content(
         self, page_id: str, *, convert_to_markdown: bool = True
     ) -> ConfluencePage:
         """
-        Get content of a specific page.
+        获取特定页面的内容。
 
         Args:
-            page_id: The ID of the page to retrieve
-            convert_to_markdown: When True, returns content in markdown format,
-                               otherwise returns raw HTML (keyword-only)
+            page_id: 要检索的页面ID
+            convert_to_markdown: 当为True时，以markdown格式返回内容，
+                               否则返回原始HTML（仅关键字参数）
 
         Returns:
-            ConfluencePage model containing the page content and metadata
+            包含页面内容和元数据的ConfluencePage模型
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
-            Exception: If there is an error retrieving the page
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
+            Exception: 如果检索页面时发生错误
         """
         try:
             logger.debug(
-                f"Using v1 API for token/basic authentication to get page '{page_id}'"
+                f"使用v1 API通过令牌/基本身份验证获取页面'{page_id}'"
             )
             page = self.confluence.get_page_by_id(
                 page_id=page_id,
@@ -48,15 +48,15 @@ class PagesMixin(ConfluenceClient):
                 content, space_key=space_key, confluence_client=self.confluence
             )
 
-            # Use the appropriate content format based on the convert_to_markdown flag
+            # 根据convert_to_markdown标志使用适当的内容格式
             page_content = processed_markdown if convert_to_markdown else processed_html
 
-            # Create and return the ConfluencePage model
+            # 创建并返回ConfluencePage模型
             return ConfluencePage.from_api_response(
                 page,
                 base_url=self.config.url,
                 include_body=True,
-                # Override content with our processed version
+                # 使用我们的处理版本覆盖内容
                 content_override=page_content,
                 content_format="storage" if not convert_to_markdown else "markdown",
                 is_cloud=self.config.is_cloud,
@@ -67,42 +67,42 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
             logger.error(
-                f"Error retrieving page content for page ID {page_id}: {str(e)}"
+                f"检索页面ID {page_id} 的页面内容时发生错误: {str(e)}"
             )
-            raise Exception(f"Error retrieving page content: {str(e)}") from e
+            raise Exception(f"检索页面内容时发生错误: {str(e)}") from e
 
     def get_page_ancestors(self, page_id: str) -> list[ConfluencePage]:
         """
-        Get ancestors (parent pages) of a specific page.
+        获取特定页面的祖先（父页面）。
 
         Args:
-            page_id: The ID of the page to get ancestors for
+            page_id: 要获取祖先的页面ID
 
         Returns:
-            List of ConfluencePage models representing the ancestors in hierarchical order
-                (immediate parent first, root ancestor last)
+            表示祖先的ConfluencePage模型列表，按层次顺序排列
+                （直接父级在前，根祖先在后）
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
         """
         try:
-            # Use the Atlassian Python API to get ancestors
+            # 使用Atlassian Python API获取祖先
             ancestors = self.confluence.get_page_ancestors(page_id)
 
-            # Process each ancestor
+            # 处理每个祖先
             ancestor_models = []
             for ancestor in ancestors:
-                # Create the page model without fetching content
+                # 创建页面模型而不获取内容
                 page_model = ConfluencePage.from_api_response(
                     ancestor,
                     base_url=self.config.url,
@@ -117,37 +117,37 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
-            logger.error(f"Error fetching ancestors for page {page_id}: {str(e)}")
-            logger.debug("Full exception details:", exc_info=True)
+            logger.error(f"获取页面{page_id}的祖先时发生错误: {str(e)}")
+            logger.debug("完整异常详情:", exc_info=True)
             return []
 
     def get_page_by_title(
         self, space_key: str, title: str, *, convert_to_markdown: bool = True
     ) -> ConfluencePage | None:
         """
-        Get a specific page by its title from a Confluence space.
+        从Confluence空间中按标题获取特定页面。
 
         Args:
-            space_key: The key of the space to search in
-            title: The title of the page to find
-            convert_to_markdown: When True, returns content in markdown format,
-                               otherwise returns raw HTML (keyword-only)
+            space_key: 要搜索的空间的键
+            title: 要查找的页面标题
+            convert_to_markdown: 当为True时，以markdown格式返回内容，
+                               否则返回原始HTML（仅关键字参数）
 
         Returns:
-            ConfluencePage model if found, None otherwise
+            如果找到则返回ConfluencePage模型，否则返回None
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
-            Exception: If there is an error retrieving the page
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
+            Exception: 如果检索页面时发生错误
         """
         try:
             page = self.confluence.get_page_by_title(
@@ -165,15 +165,15 @@ class PagesMixin(ConfluenceClient):
                 content, space_key=space_key, confluence_client=self.confluence
             )
 
-            # Use the appropriate content format based on the convert_to_markdown flag
+            # 根据convert_to_markdown标志使用适当的内容格式
             page_content = processed_markdown if convert_to_markdown else processed_html
 
-            # Create and return the ConfluencePage model
+            # 创建并返回ConfluencePage模型
             return ConfluencePage.from_api_response(
                 page,
                 base_url=self.config.url,
                 include_body=True,
-                # Override content with our processed version
+                # 使用我们的处理版本覆盖内容
                 content_override=page_content,
                 content_format="storage" if not convert_to_markdown else "markdown",
                 is_cloud=self.config.is_cloud,
@@ -184,19 +184,19 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
             logger.error(
-                f"Error retrieving page content for page ID {title}: {str(e)}"
+                f"检索页面标题{title}的页面内容时发生错误: {str(e)}"
             )
-            raise Exception(f"Error retrieving page content: {str(e)}") from e
+            raise Exception(f"检索页面内容时发生错误: {str(e)}") from e
 
     def create_page(
         self,
@@ -207,38 +207,38 @@ class PagesMixin(ConfluenceClient):
         content_representation: str | None = None,
     ) -> dict:
         """
-        Create a new page in the specified space.
+        在指定空间中创建新页面。
 
         Args:
-            space_key: The key of the space to create the page in
-            title: The title of the new page
-            body: The content of the new page
-            parent_id: Optional parent page ID to create under
-            content_representation: Content representation format (storage, wiki, etc.)
+            space_key: 要在其中创建页面的空间的键
+            title: 新页面的标题
+            body: 新页面的内容
+            parent_id: 可选的父页面ID，在其下创建
+            content_representation: 内容表示格式（storage、wiki等）
 
         Returns:
-            Dict containing the created page information
+            包含创建的页面信息的字典
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
-            Exception: If there is an error creating the page
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
+            Exception: 如果创建页面时发生错误
         """
         try:
-            # Determine representation
+            # 确定表示格式
             if content_representation == "markdown":
-                # For markdown, convert to storage format first
+                # 对于markdown，先转换为存储格式
                 final_body = self.preprocessor.convert_to_storage_format(body)
                 representation = "storage"
             elif content_representation == "wiki":
                 final_body = body
                 representation = "wiki"
             else:
-                # Use body as-is with specified representation
+                # 按原样使用body和指定的表示格式
                 final_body = body
                 representation = content_representation or "storage"
             
             logger.debug(
-                f"Using v1 API for token/basic authentication to create page '{title}'"
+                f"使用v1 API通过令牌/基本身份验证创建页面'{title}'"
             )
             result = self.confluence.create_page(
                 space=space_key,
@@ -254,17 +254,17 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
-            logger.error(f"Error creating page '{title}': {str(e)}")
-            raise Exception(f"Error creating page: {str(e)}") from e
+            logger.error(f"创建页面'{title}'时发生错误: {str(e)}")
+            raise Exception(f"创建页面时发生错误: {str(e)}") from e
 
     def update_page(
         self,
@@ -275,39 +275,39 @@ class PagesMixin(ConfluenceClient):
         version_comment: str | None = None,
     ) -> dict:
         """
-        Update an existing page.
+        更新现有页面。
 
         Args:
-            page_id: The ID of the page to update
-            title: New title for the page (optional)
-            body: New content for the page (optional)
-            content_representation: Content representation format (storage, wiki, etc.)
-            version_comment: Comment for this version update
+            page_id: 要更新的页面ID
+            title: 页面的新标题（可选）
+            body: 页面的新内容（可选）
+            content_representation: 内容表示格式（storage、wiki等）
+            version_comment: 此版本更新的注释
 
         Returns:
-            Dict containing the updated page information
+            包含更新页面信息的字典
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
-            Exception: If there is an error updating the page
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
+            Exception: 如果更新页面时发生错误
         """
         try:
-            # Determine representation
+            # 确定表示格式
             if content_representation == "markdown":
-                # For markdown, convert to storage format first
+                # 对于markdown，先转换为存储格式
                 final_body = self.preprocessor.convert_to_storage_format(body or "")
                 representation = "storage"
             elif content_representation == "wiki":
                 final_body = body or ""
                 representation = "wiki"
             else:
-                # Use body as-is with specified representation
+                # 按原样使用body和指定的表示格式
                 final_body = body or ""
                 representation = content_representation or "storage"
             
-            logger.debug(f"Updating page {page_id} with title '{title}'")
+            logger.debug(f"更新页面{page_id}，标题为'{title}'")
             logger.debug(
-                f"Using v1 API for token/basic authentication to update page '{page_id}'"
+                f"使用v1 API通过令牌/基本身份验证更新页面'{page_id}'"
             )
             response = self.confluence.update_page(
                 page_id=page_id,
@@ -323,41 +323,40 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
-            logger.error(f"Error updating page '{page_id}': {str(e)}")
-            raise Exception(f"Error updating page: {str(e)}") from e
+            logger.error(f"更新页面'{page_id}'时发生错误: {str(e)}")
+            raise Exception(f"更新页面时发生错误: {str(e)}") from e
 
     def delete_page(self, page_id: str) -> bool:
         """
-        Delete a page by its ID.
+        根据ID删除页面。
 
         Args:
-            page_id: The ID of the page to delete
+            page_id: 要删除的页面ID
 
         Returns:
-            True if the page was deleted successfully, False otherwise
+            如果页面删除成功则为True，否则为False
 
         Raises:
-            MCPAtlassianAuthenticationError: If authentication fails with the Confluence API (401/403)
-            Exception: If there is an error deleting the page
+            MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败（401/403）
+            Exception: 如果删除页面时发生错误
         """
         try:
-            logger.debug(f"Deleting page {page_id}")
+            logger.debug(f"删除页面{page_id}")
             logger.debug(
-                f"Using v1 API for token/basic authentication to delete page '{page_id}'"
+                f"使用v1 API通过令牌/基本身份验证删除页面'{page_id}'"
             )
             response = self.confluence.remove_page(page_id=page_id)
-            # The Atlassian library's remove_page returns the raw response from
-            # the REST API call. For a successful deletion, we should get a
-            # response object, but it might be empty (HTTP 204 No Content).
+            # Atlassian库的remove_page返回REST API调用的原始响应。
+            # 对于成功的删除，我们应该得到一个响应对象，但它可能为空（HTTP 204 No Content）。
             return response is not None
         except HTTPError as http_err:
             if http_err.response is not None and http_err.response.status_code in [
@@ -365,14 +364,14 @@ class PagesMixin(ConfluenceClient):
                 403,
             ]:
                 error_msg = (
-                    f"Authentication failed for Confluence API ({http_err.response.status_code}). "
-                    "Token may be expired or invalid. Please verify credentials."
+                    f"Confluence API身份验证失败（{http_err.response.status_code}）。"
+                    "令牌可能已过期或无效。请验证凭据。"
                 )
                 logger.error(error_msg)
                 raise MCPAtlassianAuthenticationError(error_msg) from http_err
             else:
-                logger.error(f"HTTP error during API call: {http_err}", exc_info=False)
+                logger.error(f"API调用期间的HTTP错误: {http_err}", exc_info=False)
                 raise http_err
         except Exception as e:
-            logger.error(f"Error deleting page '{page_id}': {str(e)}")
-            raise Exception(f"Error deleting page: {str(e)}") from e
+            logger.error(f"删除页面'{page_id}'时发生错误: {str(e)}")
+            raise Exception(f"删除页面时发生错误: {str(e)}") from e

@@ -1,4 +1,4 @@
-"""Unit tests for the ConfluenceClient class."""
+"""ConfluenceClient 类的单元测试。"""
 
 import os
 from unittest.mock import MagicMock, patch
@@ -9,8 +9,8 @@ from mcp_atlassian.confluence.config import ConfluenceConfig
 
 
 def test_init_with_basic_auth():
-    """Test initializing the client with basic auth configuration."""
-    # Arrange
+    """测试使用基本身份验证配置初始化客户端。"""
+    # 准备
     config = ConfluenceConfig(
         url="https://test.atlassian.net/wiki",
         auth_type="basic",
@@ -18,7 +18,7 @@ def test_init_with_basic_auth():
         api_token="test_token",
     )
 
-    # Mock the Confluence class, ConfluencePreprocessor, and configure_ssl_verification
+    # 模拟 Confluence 类、ConfluencePreprocessor 和 configure_ssl_verification
     with (
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence,
         patch(
@@ -28,10 +28,10 @@ def test_init_with_basic_auth():
             "mcp_atlassian.confluence.client.configure_ssl_verification"
         ) as mock_configure_ssl,
     ):
-        # Act
+        # 执行
         client = ConfluenceClient(config=config)
 
-        # Assert
+        # 断言
         mock_confluence.assert_called_once_with(
             url="https://test.atlassian.net/wiki",
             username="test_user",
@@ -53,8 +53,8 @@ def test_init_with_basic_auth():
 
 
 def test_init_with_token_auth():
-    """Test initializing the client with token auth configuration."""
-    # Arrange
+    """测试使用令牌身份验证配置初始化客户端。"""
+    # 准备
     config = ConfluenceConfig(
         url="https://confluence.example.com",
         auth_type="pat",
@@ -62,7 +62,7 @@ def test_init_with_token_auth():
         ssl_verify=False,
     )
 
-    # Mock the Confluence class, ConfluencePreprocessor, and configure_ssl_verification
+    # 模拟 Confluence 类、ConfluencePreprocessor 和 configure_ssl_verification
     with (
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence,
         patch(
@@ -72,10 +72,10 @@ def test_init_with_token_auth():
             "mcp_atlassian.confluence.client.configure_ssl_verification"
         ) as mock_configure_ssl,
     ):
-        # Act
+        # 执行
         client = ConfluenceClient(config=config)
 
-        # Assert
+        # 断言
         mock_confluence.assert_called_once_with(
             url="https://confluence.example.com",
             token="test_personal_token",
@@ -97,7 +97,7 @@ def test_init_with_token_auth():
 
 def test_init_from_env():
     """Test initializing the client from environment variables."""
-    # Arrange
+    # 准备
     with (
         patch(
             "mcp_atlassian.confluence.config.ConfluenceConfig.from_env"
@@ -109,17 +109,17 @@ def test_init_from_env():
         mock_config = MagicMock()
         mock_from_env.return_value = mock_config
 
-        # Act
+        # 执行
         client = ConfluenceClient()
 
-        # Assert
+        # 断言
         mock_from_env.assert_called_once()
         assert client.config == mock_config
 
 
 def test_process_html_content():
     """Test the _process_html_content method."""
-    # Arrange
+    # 准备
     with (
         patch("mcp_atlassian.confluence.client.ConfluenceConfig.from_env"),
         patch("mcp_atlassian.confluence.client.Confluence"),
@@ -136,10 +136,10 @@ def test_process_html_content():
 
         client = ConfluenceClient()
 
-        # Act
+        # 执行
         html, markdown = client._process_html_content("<p>Test</p>", "TEST")
 
-        # Assert
+        # 断言
         mock_preprocessor.process_html_content.assert_called_once_with(
             "<p>Test</p>", "TEST", client.confluence
         )
@@ -149,7 +149,7 @@ def test_process_html_content():
 
 def test_get_user_details_by_accountid():
     """Test the get_user_details_by_accountid method."""
-    # Arrange
+    # 准备
     with (
         patch("mcp_atlassian.confluence.client.ConfluenceConfig.from_env"),
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence_class,
@@ -166,10 +166,10 @@ def test_get_user_details_by_accountid():
 
         client = ConfluenceFetcher()
 
-        # Act
+        # 执行
         user_details = client.get_user_details_by_accountid("123456")
 
-        # Assert
+        # 断言
         mock_confluence.get_user_details_by_accountid.assert_called_once_with(
             "123456", None
         )

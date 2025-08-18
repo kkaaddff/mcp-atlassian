@@ -17,9 +17,9 @@ F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
 def check_write_access(func: F) -> F:
     """
-    Decorator for FastMCP tools to check if the application is in read-only mode.
-    If in read-only mode, it raises a ValueError.
-    Assumes the decorated function is async and has `ctx: Context` as its first argument.
+    用于FastMCP工具的装饰器，检查应用程序是否处于只读模式。
+    如果处于只读模式，则引发ValueError。
+    假设被装饰的函数是异步的，并且具有`ctx: Context`作为其第一个参数。
     """
 
     @wraps(func)
@@ -46,10 +46,10 @@ def check_write_access(func: F) -> F:
 
 def handle_atlassian_api_errors(service_name: str = "Atlassian API") -> Callable:
     """
-    Decorator to handle common Atlassian API exceptions (Jira, Confluence, etc.).
+    处理常见Atlassian API异常（Jira、Confluence等）的装饰器。
 
-    Args:
-        service_name: Name of the service for error logging (e.g., "Jira API").
+    参数:
+        service_name: 用于错误日志记录的服务名称（例如"Jira API"）。
     """
 
     def decorator(func: Callable) -> Callable:
@@ -63,36 +63,36 @@ def handle_atlassian_api_errors(service_name: str = "Atlassian API") -> Callable
                     403,
                 ]:
                     error_msg = (
-                        f"Authentication failed for {service_name} "
+                        f"{service_name} 身份验证失败 "
                         f"({http_err.response.status_code}). "
-                        "Token may be expired or invalid. Please verify credentials."
+                        "令牌可能已过期或无效。请验证凭据。"
                     )
                     logger.error(error_msg)
                     raise MCPAtlassianAuthenticationError(error_msg) from http_err
                 else:
                     operation_name = getattr(func, "__name__", "API operation")
                     logger.error(
-                        f"HTTP error during {operation_name}: {http_err}",
+                        f"{operation_name}期间发生HTTP错误: {http_err}",
                         exc_info=False,
                     )
                     raise http_err
             except KeyError as e:
                 operation_name = getattr(func, "__name__", "API operation")
-                logger.error(f"Missing key in {operation_name} results: {str(e)}")
+                logger.error(f"{operation_name}结果中缺少键: {str(e)}")
                 return []
             except requests.RequestException as e:
                 operation_name = getattr(func, "__name__", "API operation")
-                logger.error(f"Network error during {operation_name}: {str(e)}")
+                logger.error(f"{operation_name}期间发生网络错误: {str(e)}")
                 return []
             except (ValueError, TypeError) as e:
                 operation_name = getattr(func, "__name__", "API operation")
-                logger.error(f"Error processing {operation_name} results: {str(e)}")
+                logger.error(f"处理{operation_name}结果时出错: {str(e)}")
                 return []
             except Exception as e:  # noqa: BLE001 - Intentional fallback with logging
                 operation_name = getattr(func, "__name__", "API operation")
-                logger.error(f"Unexpected error during {operation_name}: {str(e)}")
+                logger.error(f"{operation_name}期间发生意外错误: {str(e)}")
                 logger.debug(
-                    f"Full exception details for {operation_name}:", exc_info=True
+                    f"{operation_name}的完整异常详细信息:", exc_info=True
                 )
                 return []
 
