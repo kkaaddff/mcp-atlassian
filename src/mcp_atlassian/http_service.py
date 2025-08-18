@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from mcp_atlassian.confluence import ConfluenceFetcher, ConfluenceConfig
-from mcp_atlassian.utils.oauth import OAuthConfig, BYOAccessTokenOAuthConfig
 
 logger = logging.getLogger("mcp-confluence.http_service")
 
@@ -17,12 +16,10 @@ class ConfluenceAuthRequest(BaseModel):
     """Request model for Confluence operations with authentication."""
     
     base_url: str = Field(..., description="Base URL for Confluence instance")
-    auth_type: str = Field(..., description="Authentication type: 'basic', 'pat', or 'oauth'")
+    auth_type: str = Field(..., description="Authentication type: 'basic' or 'pat'")
     username: Optional[str] = Field(None, description="Username for basic auth")
     api_token: Optional[str] = Field(None, description="API token for basic auth")
     personal_token: Optional[str] = Field(None, description="Personal access token for Server/DC")
-    oauth_token: Optional[str] = Field(None, description="OAuth access token")
-    cloud_id: Optional[str] = Field(None, description="Cloud ID for OAuth")
     operation: str = Field(..., description="Operation to perform")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the operation")
 
@@ -36,29 +33,8 @@ class ConfluenceAuthService:
     async def create_config_from_request(self, request: ConfluenceAuthRequest) -> ConfluenceConfig:
         """Create ConfluenceConfig from request parameters."""
         
-        # Determine authentication configuration
-        oauth_config = None
         
-        if request.auth_type == "oauth":
-            if not request.oauth_token:
-                raise HTTPException(status_code=400, detail="OAuth token is required for OAuth authentication")
-            
-            if not request.cloud_id:
-                raise HTTPException(status_code=400, detail="Cloud ID is required for OAuth authentication")
-            
-            # Create minimal OAuth config for user-provided token
-            oauth_config = BYOAccessTokenOAuthConfig(
-                client_id="",
-                client_secret="",
-                redirect_uri="",
-                scope="",
-                access_token=request.oauth_token,
-                refresh_token=None,
-                expires_at=None,
-                cloud_id=request.cloud_id,
-            )
-        
-        elif request.auth_type == "basic":
+        if request.auth_type == "basic":
             if not request.username or not request.api_token:
                 raise HTTPException(status_code=400, detail="Username and API token are required for basic auth")
         
@@ -66,6 +42,9 @@ class ConfluenceAuthService:
             if not request.personal_token:
                 raise HTTPException(status_code=400, detail="Personal token is required for PAT authentication")
         
+        elif request.auth_type == "pat":
+            if not request.personal_token:
+                raise HTTPException(status_code=400, detail="Personal token is required for PAT authentication")
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported auth type: {request.auth_type}")
         
@@ -76,7 +55,6 @@ class ConfluenceAuthService:
             username=request.username,
             api_token=request.api_token,
             personal_token=request.personal_token,
-            oauth_config=oauth_config,
             ssl_verify=True,  # Default to SSL verification
         )
         

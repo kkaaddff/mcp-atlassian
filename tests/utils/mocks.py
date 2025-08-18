@@ -13,21 +13,6 @@ class MockEnvironment:
 
     @staticmethod
     @contextmanager
-    def oauth_env():
-        """Context manager for OAuth environment variables."""
-        oauth_vars = AuthConfigFactory.create_oauth_config()
-        env_vars = {
-            "ATLASSIAN_OAUTH_CLIENT_ID": oauth_vars["client_id"],
-            "ATLASSIAN_OAUTH_CLIENT_SECRET": oauth_vars["client_secret"],
-            "ATLASSIAN_OAUTH_REDIRECT_URI": oauth_vars["redirect_uri"],
-            "ATLASSIAN_OAUTH_SCOPE": oauth_vars["scope"],
-            "ATLASSIAN_OAUTH_CLOUD_ID": oauth_vars["cloud_id"],
-        }
-        with patch.dict(os.environ, env_vars, clear=False):
-            yield env_vars
-
-    @staticmethod
-    @contextmanager
     def basic_auth_env():
         """Context manager for basic auth environment variables."""
         auth_config = AuthConfigFactory.create_basic_auth_config()
@@ -44,6 +29,18 @@ class MockEnvironment:
 
     @staticmethod
     @contextmanager
+    def pat_env():
+        """Context manager for PAT environment variables."""
+        auth_config = AuthConfigFactory.create_pat_auth_config()
+        env_vars = {
+            "CONFLUENCE_URL": auth_config["url"],
+            "CONFLUENCE_PERSONAL_TOKEN": auth_config["personal_token"],
+        }
+        with patch.dict(os.environ, env_vars, clear=False):
+            yield env_vars
+
+    @staticmethod
+    @contextmanager
     def clean_env():
         """Context manager with no authentication environment variables."""
         auth_vars = [
@@ -53,12 +50,7 @@ class MockEnvironment:
             "CONFLUENCE_URL",
             "CONFLUENCE_USERNAME",
             "CONFLUENCE_API_TOKEN",
-            "ATLASSIAN_OAUTH_CLIENT_ID",
-            "ATLASSIAN_OAUTH_CLIENT_SECRET",
-            "ATLASSIAN_OAUTH_REDIRECT_URI",
-            "ATLASSIAN_OAUTH_SCOPE",
-            "ATLASSIAN_OAUTH_CLOUD_ID",
-            "ATLASSIAN_OAUTH_ENABLE",
+            "CONFLUENCE_PERSONAL_TOKEN",
         ]
 
         # Remove auth vars from environment
@@ -131,29 +123,6 @@ class MockAtlassianClient:
         return client
 
 
-class MockOAuthServer:
-    """Utility for mocking OAuth server interactions."""
-
-    @staticmethod
-    @contextmanager
-    def mock_oauth_flow():
-        """Context manager for mocking complete OAuth flow."""
-        with (
-            patch("http.server.HTTPServer") as mock_server,
-            patch("webbrowser.open") as mock_browser,
-            patch("secrets.token_urlsafe") as mock_token,
-        ):
-            # Configure mocks
-            mock_token.return_value = "test-state-token"
-            mock_server_instance = MagicMock()
-            mock_server.return_value = mock_server_instance
-
-            yield {
-                "server": mock_server,
-                "server_instance": mock_server_instance,
-                "browser": mock_browser,
-                "token": mock_token,
-            }
 
 
 class MockFastMCP:

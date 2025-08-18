@@ -75,16 +75,16 @@ def test_custom_issue(make_jira_issue):
 Enhanced environment fixtures for testing different authentication scenarios:
 
 - `clean_environment`: No authentication variables
-- `oauth_environment`: OAuth setup
+- `pat_environment`: PAT setup
 - `basic_auth_environment`: Basic auth setup
 - `parametrized_auth_env`: Parameterized auth testing
 
 ```python
 # Example usage
 @pytest.mark.parametrize("parametrized_auth_env",
-                       ["oauth", "basic_auth"], indirect=True)
+                       ["pat", "basic_auth"], indirect=True)
 def test_auth_scenarios(parametrized_auth_env):
-    # Test runs once for OAuth and once for basic auth
+    # Test runs once for PAT and once for basic auth
     pass
 ```
 
@@ -191,12 +191,12 @@ Use parametrized fixtures for testing multiple scenarios:
 
 ```python
 @pytest.mark.parametrize("parametrized_auth_env",
-                       ["oauth", "basic_auth", "clean"], indirect=True)
+                       ["pat", "basic_auth", "clean"], indirect=True)
 def test_auth_detection(parametrized_auth_env):
     # Test with different auth environments
     detector = AuthDetector()
     auth_type = detector.detect_auth_type()
-    assert auth_type in ["oauth", "basic", None]
+    assert auth_type in ["pat", "basic", None]
 ```
 
 ## Backward Compatibility
@@ -240,7 +240,7 @@ def test_jira_issue_creation(make_jira_issue):
 def test_complex_workflow(
     make_jira_issue_with_worklog,
     make_confluence_page_with_content,
-    oauth_environment
+    pat_environment
 ):
     # Create issue with worklog
     issue = make_jira_issue_with_worklog(
@@ -256,7 +256,7 @@ def test_complex_workflow(
         labels=["workflow", "documentation"]
     )
 
-    # Test workflow with OAuth environment
+    # Test workflow with PAT environment
     workflow = ComplexWorkflow(issue, page)
     result = workflow.execute()
 

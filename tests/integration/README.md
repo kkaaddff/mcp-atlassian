@@ -5,12 +5,11 @@ This directory contains integration tests for the MCP Atlassian project. These t
 ## Test Categories
 
 ### 1. Authentication Integration (`test_authentication.py`)
-Tests various authentication flows including OAuth, Basic Auth, and PAT tokens.
+Tests various authentication flows including Basic Auth and PAT tokens.
 
-- **OAuth Token Refresh**: Validates token refresh on expiration
 - **Basic Auth**: Tests username/password authentication for both services
 - **PAT Tokens**: Tests Personal Access Token authentication
-- **Fallback Patterns**: Tests authentication fallback (OAuth → Basic → PAT)
+- **Fallback Patterns**: Tests authentication fallback (Basic → PAT)
 - **Mixed Scenarios**: Tests different authentication combinations
 
 ### 2. Cross-Service Integration (`test_cross_service.py`)

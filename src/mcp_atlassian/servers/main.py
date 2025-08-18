@@ -251,7 +251,7 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                     f"UserTokenMiddleware.dispatch: Bearer token extracted (masked): ...{mask_sensitive(token, 8)}"
                 )
                 request.state.user_atlassian_token = token
-                request.state.user_atlassian_auth_type = "oauth"
+                request.state.user_atlassian_auth_type = "basic"
                 request.state.user_atlassian_email = None
                 logger.debug(
                     f"UserTokenMiddleware.dispatch: Set request.state (pre-validation): "
@@ -282,7 +282,7 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
                 )
                 return JSONResponse(
                     {
-                        "error": "Unauthorized: Only 'Bearer <OAuthToken>' or 'Token <PAT>' types are supported."
+                        "error": "Unauthorized: Only 'Bearer <APIToken>' or 'Token <PAT>' types are supported."
                     },
                     status_code=401,
                 )

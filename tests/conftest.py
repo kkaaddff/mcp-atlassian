@@ -38,14 +38,14 @@ def session_auth_configs():
     Session-scoped fixture providing authentication configuration templates.
 
     This fixture is computed once per test session and provides standard
-    authentication configurations for OAuth and basic auth scenarios.
+    authentication configurations for basic auth and PAT scenarios.
 
     Returns:
         Dict[str, Dict[str, str]]: Authentication configuration templates
     """
     return {
-        "oauth": AuthConfigFactory.create_oauth_config(),
         "basic_auth": AuthConfigFactory.create_basic_auth_config(),
+        "pat_auth": AuthConfigFactory.create_pat_auth_config(),
         "jira_basic": {
             "url": "https://test.atlassian.net",
             "username": "test@example.com",
@@ -106,14 +106,14 @@ def clean_environment():
 
 
 @pytest.fixture
-def oauth_environment():
+def pat_environment():
     """
-    Fixture that provides a complete OAuth environment setup.
+    Fixture that provides a complete PAT environment setup.
 
-    This sets up all necessary OAuth environment variables for testing
-    OAuth-based authentication flows.
+    This sets up all necessary PAT environment variables for testing
+    PAT-based authentication flows.
     """
-    with MockEnvironment.oauth_env() as env:
+    with MockEnvironment.pat_env() as env:
         yield env
 
 
@@ -176,13 +176,13 @@ def make_auth_config():
         Dict[str, Callable]: Factory functions for different auth types
 
     Example:
-        def test_oauth_config(make_auth_config):
-            config = make_auth_config["oauth"](client_id="custom-id")
-            assert config["client_id"] == "custom-id"
+        def test_basic_config(make_auth_config):
+            config = make_auth_config["basic"](username="custom-user")
+            assert config["username"] == "custom-user"
     """
     return {
-        "oauth": AuthConfigFactory.create_oauth_config,
         "basic": AuthConfigFactory.create_basic_auth_config,
+        "pat": AuthConfigFactory.create_pat_auth_config,
     }
 
 
@@ -279,8 +279,8 @@ def env_var_manager():
 
     Example:
         def test_with_custom_env(env_var_manager):
-            with env_var_manager.oauth_env():
-                # Test OAuth functionality
+            with env_var_manager.pat_env():
+                # Test PAT functionality
                 pass
     """
     return MockEnvironment
@@ -296,15 +296,15 @@ def parametrized_auth_env(request):
 
     Example:
         @pytest.mark.parametrize("parametrized_auth_env",
-                               ["oauth", "basic_auth"], indirect=True)
+                               ["pat", "basic_auth"], indirect=True)
         def test_auth_scenarios(parametrized_auth_env):
-            # Test will run once for OAuth and once for basic auth
+            # Test will run once for PAT and once for basic auth
             pass
     """
     auth_type = request.param
 
-    if auth_type == "oauth":
-        with MockEnvironment.oauth_env() as env:
+    if auth_type == "pat":
+        with MockEnvironment.pat_env() as env:
             yield env
     elif auth_type == "basic_auth":
         with MockEnvironment.basic_auth_env() as env:

@@ -13,8 +13,6 @@ from .lifecycle import (
 )
 from .logging import setup_logging
 
-# Export OAuth utilities
-from .oauth import OAuthConfig, configure_oauth_session
 from .ssl import SSLIgnoreAdapter, configure_ssl_verification
 from .urls import is_atlassian_cloud_url
 
@@ -27,8 +25,6 @@ __all__ = [
     "setup_logging",
     "parse_date",
     "parse_iso8601_date",
-    "OAuthConfig",
-    "configure_oauth_session",
     "setup_signal_handlers",
     "ensure_clean_exit",
 ]

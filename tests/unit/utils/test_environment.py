@@ -23,15 +23,6 @@ def setup_logger():
 def env_scenarios():
     """Environment configuration scenarios for testing."""
     return {
-        "oauth_cloud": {
-            "CONFLUENCE_URL": "https://company.atlassian.net",
-            "JIRA_URL": "https://company.atlassian.net",
-            "ATLASSIAN_OAUTH_CLIENT_ID": "client_id",
-            "ATLASSIAN_OAUTH_CLIENT_SECRET": "client_secret",
-            "ATLASSIAN_OAUTH_REDIRECT_URI": "http://localhost:8080/callback",
-            "ATLASSIAN_OAUTH_SCOPE": "read:jira-user",
-            "ATLASSIAN_OAUTH_CLOUD_ID": "cloud_id",
-        },
         "basic_auth_cloud": {
             "CONFLUENCE_URL": "https://company.atlassian.net",
             "CONFLUENCE_USERNAME": "user@company.com",
@@ -65,7 +56,6 @@ def _assert_service_availability(result, confluence_expected, jira_expected):
 def _assert_authentication_logs(caplog, auth_type, services):
     """Helper to assert authentication log messages."""
     log_patterns = {
-        "oauth": "OAuth 2.0 (3LO) authentication (Cloud-only features)",
         "cloud_basic": "Cloud Basic Authentication (API Token)",
         "server": "Server/Data Center authentication (PAT or Basic Auth)",
         "not_configured": "is not configured or required environment variables are missing",
@@ -100,7 +90,6 @@ class TestGetAvailableServices:
     @pytest.mark.parametrize(
         "scenario,expected_confluence,expected_jira",
         [
-            ("oauth_cloud", True, True),
             ("basic_auth_cloud", True, True),
             ("pat_server", True, True),
             ("basic_auth_server", True, True),
@@ -124,8 +113,6 @@ class TestGetAvailableServices:
             )
 
             # Verify appropriate log messages based on scenario
-            if scenario == "oauth_cloud":
-                _assert_authentication_logs(caplog, "oauth", ["confluence", "jira"])
             elif scenario == "basic_auth_cloud":
                 _assert_authentication_logs(
                     caplog, "cloud_basic", ["confluence", "jira"]
@@ -133,34 +120,6 @@ class TestGetAvailableServices:
             elif scenario in ["pat_server", "basic_auth_server"]:
                 _assert_authentication_logs(caplog, "server", ["confluence", "jira"])
 
-    @pytest.mark.parametrize(
-        "missing_oauth_var",
-        [
-            "ATLASSIAN_OAUTH_CLIENT_ID",
-            "ATLASSIAN_OAUTH_CLIENT_SECRET",
-            "ATLASSIAN_OAUTH_REDIRECT_URI",
-            "ATLASSIAN_OAUTH_SCOPE",
-            "ATLASSIAN_OAUTH_CLOUD_ID",
-        ],
-    )
-    def test_oauth_missing_required_vars(
-        self, env_scenarios, missing_oauth_var, caplog
-    ):
-        """Test that OAuth fails when any required variable is missing."""
-        with MockEnvironment.clean_env():
-            oauth_config = env_scenarios["oauth_cloud"]
-            # Remove one required OAuth variable
-            del oauth_config[missing_oauth_var]
-
-            for key, value in oauth_config.items():
-                import os
-
-                os.environ[key] = value
-
-            result = get_available_services()
-            _assert_service_availability(
-                result, confluence_expected=False, jira_expected=False
-            )
 
     @pytest.mark.parametrize(
         "missing_basic_vars,service",
@@ -190,28 +149,6 @@ class TestGetAvailableServices:
                 result, confluence_expected=False, jira_expected=False
             )
 
-    def test_oauth_precedence_over_basic_auth(self, env_scenarios, caplog):
-        """Test that OAuth takes precedence over Basic Auth."""
-        with MockEnvironment.clean_env():
-            # Set both OAuth and Basic Auth variables
-            combined_config = {
-                **env_scenarios["oauth_cloud"],
-                **env_scenarios["basic_auth_cloud"],
-            }
-
-            for key, value in combined_config.items():
-                import os
-
-                os.environ[key] = value
-
-            result = get_available_services()
-            _assert_service_availability(
-                result, confluence_expected=True, jira_expected=True
-            )
-
-            # Should use OAuth, not Basic Auth
-            _assert_authentication_logs(caplog, "oauth", ["confluence", "jira"])
-            assert "Basic Authentication" not in caplog.text
 
     def test_mixed_service_configuration(self, caplog):
         """Test mixed configurations where only one service is configured."""

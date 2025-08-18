@@ -15,7 +15,6 @@ from starlette.requests import Request
 
 from mcp_atlassian.confluence import ConfluenceConfig, ConfluenceFetcher
 from mcp_atlassian.servers.context import MainAppContext
-from mcp_atlassian.utils.oauth import OAuthConfig
 
 if TYPE_CHECKING:
     from mcp_atlassian.confluence.config import (
@@ -35,9 +34,9 @@ def _create_user_config_for_fetcher(
 
     Args:
         base_config: The base ConfluenceConfig to clone and modify.
-        auth_type: The authentication type ('oauth' or 'pat').
+        auth_type: The authentication type ('basic' or 'pat').
         credentials: Dictionary of credentials (token, email, etc).
-        cloud_id: Optional cloud ID to override the base config cloud ID.
+        cloud_id: Optional cloud ID (not used for basic/PAT auth).
 
     Returns:
         ConfluenceConfig with user-specific credentials.
@@ -46,15 +45,15 @@ def _create_user_config_for_fetcher(
         ValueError: If required credentials are missing or auth_type is unsupported.
         TypeError: If base_config is not a supported type.
     """
-    if auth_type not in ["oauth", "pat"]:
+    if auth_type not in ["basic", "pat"]:
         raise ValueError(
-            f"Unsupported auth_type '{auth_type}' for user-specific config creation. Expected 'oauth' or 'pat'."
+            f"Unsupported auth_type '{auth_type}' for user-specific config creation. Expected 'basic' or 'pat'."
         )
 
     username_for_config: str | None = credentials.get("user_email_context")
 
     logger.debug(
-        f"Creating user config for fetcher. Auth type: {auth_type}, Credentials keys: {credentials.keys()}, Cloud ID: {cloud_id}"
+        f"Creating user config for fetcher. Auth type: {auth_type}, Credentials keys: {credentials.keys()}"
     )
 
     common_args: dict[str, Any] = {
@@ -67,55 +66,7 @@ def _create_user_config_for_fetcher(
         "socks_proxy": base_config.socks_proxy,
     }
 
-    if auth_type == "oauth":
-        user_access_token = credentials.get("oauth_access_token")
-        if not user_access_token:
-            raise ValueError(
-                "OAuth access token missing in credentials for user auth_type 'oauth'"
-            )
-        if (
-            not base_config
-            or not hasattr(base_config, "oauth_config")
-            or not getattr(base_config, "oauth_config", None)
-        ):
-            raise ValueError(
-                f"Global OAuth config for {type(base_config).__name__} is missing, "
-                "but user auth_type is 'oauth'."
-            )
-        global_oauth_cfg = base_config.oauth_config
-
-        # Use provided cloud_id or fall back to global config cloud_id
-        effective_cloud_id = cloud_id if cloud_id else global_oauth_cfg.cloud_id
-        if not effective_cloud_id:
-            raise ValueError(
-                "Cloud ID is required for OAuth authentication. "
-                "Provide it via X-Atlassian-Cloud-Id header or configure it globally."
-            )
-
-        # For minimal OAuth config (user-provided tokens), use empty strings for client credentials
-        oauth_config_for_user = OAuthConfig(
-            client_id=global_oauth_cfg.client_id if global_oauth_cfg.client_id else "",
-            client_secret=global_oauth_cfg.client_secret
-            if global_oauth_cfg.client_secret
-            else "",
-            redirect_uri=global_oauth_cfg.redirect_uri
-            if global_oauth_cfg.redirect_uri
-            else "",
-            scope=global_oauth_cfg.scope if global_oauth_cfg.scope else "",
-            access_token=user_access_token,
-            refresh_token=None,
-            expires_at=None,
-            cloud_id=effective_cloud_id,
-        )
-        common_args.update(
-            {
-                "username": username_for_config,
-                "api_token": None,
-                "personal_token": None,
-                "oauth_config": oauth_config_for_user,
-            }
-        )
-    elif auth_type == "pat":
+    if auth_type == "pat":
         user_pat = credentials.get("personal_access_token")
         if not user_pat:
             raise ValueError("PAT missing in credentials for user auth_type 'pat'")
@@ -130,9 +81,21 @@ def _create_user_config_for_fetcher(
         common_args.update(
             {
                 "personal_token": user_pat,
-                "oauth_config": None,
                 "username": None,
                 "api_token": None,
+            }
+        )
+    elif auth_type == "basic":
+        username = credentials.get("username")
+        api_token = credentials.get("api_token")
+        if not username or not api_token:
+            raise ValueError("Username and API token required for basic auth")
+
+        common_args.update(
+            {
+                "username": username,
+                "api_token": api_token,
+                "personal_token": None,
             }
         )
 
@@ -179,7 +142,7 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             return request.state.confluence_fetcher
         user_auth_type = getattr(request.state, "user_atlassian_auth_type", None)
         logger.debug(f"get_confluence_fetcher: User auth type: {user_auth_type}")
-        if user_auth_type in ["oauth", "pat"] and hasattr(
+        if user_auth_type in ["basic", "pat"] and hasattr(
             request.state, "user_atlassian_token"
         ):
             user_token = getattr(request.state, "user_atlassian_token", None)
@@ -189,8 +152,9 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             if not user_token:
                 raise ValueError("User Atlassian token found in state but is empty.")
             credentials = {"user_email_context": user_email}
-            if user_auth_type == "oauth":
-                credentials["oauth_access_token"] = user_token
+            if user_auth_type == "basic":
+                credentials["api_token"] = user_token
+                credentials["username"] = user_email
             elif user_auth_type == "pat":
                 credentials["personal_access_token"] = user_token
             lifespan_ctx_dict = ctx.request_context.lifespan_context  # type: ignore

@@ -195,7 +195,7 @@ class TestMCPAtlassianAuthenticationError:
         assert "403" in str(error_403)
         assert "Insufficient permissions" in str(error_403)
 
-        # OAuth token expired
-        oauth_error = MCPAtlassianAuthenticationError("OAuth token has expired")
-        assert "OAuth" in str(oauth_error)
-        assert "expired" in str(oauth_error)
+        # API token expired
+        token_error = MCPAtlassianAuthenticationError("API token has expired")
+        assert "API token" in str(token_error)
+        assert "expired" in str(token_error)

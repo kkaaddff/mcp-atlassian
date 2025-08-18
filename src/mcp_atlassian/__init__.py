@@ -44,11 +44,6 @@ logger = setup_logging(logging_level, logging_stream)
     "--env-file", type=click.Path(exists=True, dir_okay=False), help="Path to .env file"
 )
 @click.option(
-    "--oauth-setup",
-    is_flag=True,
-    help="Run OAuth 2.0 setup wizard for Confluence Cloud",
-)
-@click.option(
     "--transport",
     type=click.Choice(["stdio", "sse", "streamable-http"]),
     default="stdio",
@@ -98,31 +93,6 @@ logger = setup_logging(logging_level, logging_stream)
     help="Comma-separated list of tools to enable (enables all if not specified)",
 )
 @click.option(
-    "--oauth-client-id",
-    help="OAuth 2.0 client ID for Confluence Cloud",
-)
-@click.option(
-    "--oauth-client-secret",
-    help="OAuth 2.0 client secret for Confluence Cloud",
-)
-@click.option(
-    "--oauth-redirect-uri",
-    help="OAuth 2.0 redirect URI for Confluence Cloud",
-)
-@click.option(
-    "--oauth-scope",
-    help="OAuth 2.0 scopes (space-separated) for Confluence Cloud",
-)
-@click.option(
-    "--oauth-cloud-id",
-    help="Atlassian Cloud ID for OAuth 2.0 authentication",
-)
-@click.option(
-    "--oauth-access-token",
-    help="Confluence Cloud OAuth 2.0 access token (if you have your own you'd like to "
-    "use for the session.)",
-)
-@click.option(
     "--http-service",
     is_flag=True,
     help="Run as HTTP service with configurable base URL and request-based authentication",
@@ -130,7 +100,6 @@ logger = setup_logging(logging_level, logging_stream)
 def main(
     verbose: int,
     env_file: str | None,
-    oauth_setup: bool,
     transport: str,
     port: int,
     host: str,
@@ -143,21 +112,14 @@ def main(
     confluence_spaces_filter: str | None,
     read_only: bool,
     enabled_tools: str | None,
-    oauth_client_id: str | None,
-    oauth_client_secret: str | None,
-    oauth_redirect_uri: str | None,
-    oauth_scope: str | None,
-    oauth_cloud_id: str | None,
-    oauth_access_token: str | None,
     http_service: bool,
 ) -> None:
     """MCP Confluence Server - Confluence functionality for MCP
 
-    Supports both Atlassian Cloud and Confluence Server/Data Center deployments.
+    Supports Confluence Server/Data Center deployments.
     Authentication methods supported:
     - Username and API token (Cloud)
     - Personal Access Token (Server/Data Center)
-    - OAuth 2.0 (Cloud only)
     """
     # Logging level logic
     if verbose == 1:
@@ -199,16 +161,6 @@ def main(
             "Attempting to load environment from default .env file if it exists"
         )
         load_dotenv(override=True)
-
-    if oauth_setup:
-        logger.info("Starting OAuth 2.0 setup wizard")
-        try:
-            from .utils.oauth_setup import run_oauth_setup
-
-            sys.exit(run_oauth_setup())
-        except ImportError:
-            logger.error("Failed to import OAuth setup module.")
-            sys.exit(1)
 
     if http_service:
         logger.info("Starting HTTP service with configurable base URL and request-based authentication")
@@ -272,18 +224,6 @@ def main(
         os.environ["CONFLUENCE_API_TOKEN"] = confluence_token
     if click_ctx and was_option_provided(click_ctx, "confluence_personal_token"):
         os.environ["CONFLUENCE_PERSONAL_TOKEN"] = confluence_personal_token
-    if click_ctx and was_option_provided(click_ctx, "oauth_client_id"):
-        os.environ["CONFLUENCE_OAUTH_CLIENT_ID"] = oauth_client_id
-    if click_ctx and was_option_provided(click_ctx, "oauth_client_secret"):
-        os.environ["CONFLUENCE_OAUTH_CLIENT_SECRET"] = oauth_client_secret
-    if click_ctx and was_option_provided(click_ctx, "oauth_redirect_uri"):
-        os.environ["CONFLUENCE_OAUTH_REDIRECT_URI"] = oauth_redirect_uri
-    if click_ctx and was_option_provided(click_ctx, "oauth_scope"):
-        os.environ["CONFLUENCE_OAUTH_SCOPE"] = oauth_scope
-    if click_ctx and was_option_provided(click_ctx, "oauth_cloud_id"):
-        os.environ["CONFLUENCE_OAUTH_CLOUD_ID"] = oauth_cloud_id
-    if click_ctx and was_option_provided(click_ctx, "oauth_access_token"):
-        os.environ["CONFLUENCE_OAUTH_ACCESS_TOKEN"] = oauth_access_token
     if click_ctx and was_option_provided(click_ctx, "read_only"):
         os.environ["READ_ONLY_MODE"] = str(read_only).lower()
     if click_ctx and was_option_provided(click_ctx, "confluence_ssl_verify"):

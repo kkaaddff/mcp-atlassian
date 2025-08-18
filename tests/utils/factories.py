@@ -66,26 +66,21 @@ class AuthConfigFactory:
     """Factory for authentication configuration objects."""
 
     @staticmethod
-    def create_oauth_config(**overrides) -> dict[str, str]:
-        """Create OAuth configuration."""
-        defaults = {
-            "client_id": "test-client-id",
-            "client_secret": "test-client-secret",
-            "redirect_uri": "http://localhost:8080/callback",
-            "scope": "read:jira-work write:jira-work",
-            "cloud_id": "test-cloud-id",
-            "access_token": "test-access-token",
-            "refresh_token": "test-refresh-token",
-        }
-        return {**defaults, **overrides}
-
-    @staticmethod
     def create_basic_auth_config(**overrides) -> dict[str, str]:
         """Create basic auth configuration."""
         defaults = {
             "url": "https://test.atlassian.net",
             "username": "test@example.com",
             "api_token": "test-api-token",
+        }
+        return {**defaults, **overrides}
+
+    @staticmethod
+    def create_pat_auth_config(**overrides) -> dict[str, str]:
+        """Create PAT auth configuration."""
+        defaults = {
+            "url": "https://confluence.example.com",
+            "personal_token": "test-pat-token",
         }
         return {**defaults, **overrides}
 

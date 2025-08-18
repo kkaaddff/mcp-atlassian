@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/7fe9c488-ad0c-4876-9b54-120b666bb785
 
 ### 🔐 1. Authentication Setup
 
-MCP Confluence supports three authentication methods:
+MCP Confluence supports two authentication methods:
 
 #### A. API Token Authentication (Cloud) - **Recommended**
 
@@ -45,53 +45,6 @@ MCP Confluence supports three authentication methods:
 1. Go to your profile (avatar) → **Profile** → **Personal Access Tokens**
 2. Click **Create token**, name it, set expiry
 3. Copy the token immediately
-
-#### C. OAuth 2.0 Authentication (Cloud) - **Advanced**
-
-> [!NOTE]
-> OAuth 2.0 is more complex to set up but provides enhanced security features. For most users, API Token authentication (Method A) is simpler and sufficient.
-
-1. Go to [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/)
-2. Create an "OAuth 2.0 (3LO) integration" app
-3. Configure **Permissions** (scopes) for Confluence
-4. Set **Callback URL** (e.g., `http://localhost:8080/callback`)
-5. Run setup wizard:
-   ```bash
-   mcp-confluence --oauth-setup -v
-   ```
-6. Follow prompts for `Client ID`, `Secret`, `URI`, and `Scope`
-7. Complete browser authorization
-8. Add obtained credentials to `.env` or IDE config:
-   - `CONFLUENCE_OAUTH_CLOUD_ID` (from wizard)
-   - `CONFLUENCE_OAUTH_CLIENT_ID`
-   - `CONFLUENCE_OAUTH_CLIENT_SECRET`
-   - `CONFLUENCE_OAUTH_REDIRECT_URI`
-   - `CONFLUENCE_OAUTH_SCOPE`
-
-> [!IMPORTANT]
-> For the standard OAuth flow described above, include `offline_access` in your scope (e.g., `read:confluence-content.all write:confluence-content offline_access`). This allows the server to refresh the access token automatically.
-
-<details>
-<summary>Alternative: Using a Pre-existing OAuth Access Token (BYOT)</summary>
-
-If you are running mcp-confluence part of a larger system that manages Atlassian OAuth 2.0 access tokens externally (e.g., through a central identity provider or another application), you can provide an access token directly to this MCP server. This method bypasses the interactive setup wizard and the server's internal token management (including refresh capabilities).
-
-**Requirements:**
-- A valid Atlassian OAuth 2.0 Access Token with the necessary scopes for the intended operations.
-- The corresponding `CONFLUENCE_OAUTH_CLOUD_ID` for your Atlassian instance.
-
-**Configuration:**
-To use this method, set the following environment variables (or use the corresponding command-line flags when starting the server):
-- `CONFLUENCE_OAUTH_CLOUD_ID`: Your Atlassian Cloud ID. (CLI: `--oauth-cloud-id`)
-- `CONFLUENCE_OAUTH_ACCESS_TOKEN`: Your pre-existing OAuth 2.0 access token. (CLI: `--oauth-access-token`)
-
-**Important Considerations for BYOT:**
-- **Token Lifecycle Management:** When using BYOT, the MCP server **does not** handle token refresh. The responsibility for obtaining, refreshing (before expiry), and revoking the access token lies entirely with you or the external system providing the token.
-- **Token Expiry:** If the provided token expires during a session, the MCP server will fail all subsequent API calls until a fresh token is provided.
-- **Security:** Ensure your token is stored and transmitted securely, as it grants access to your Confluence instance.
-- **Scope Compatibility:** The scopes associated with your token must be compatible with the operations you intend to perform through the MCP server.
-
-</details>
 
 ### ⚙️ 2. Environment Configuration
 
@@ -141,12 +94,10 @@ The HTTP service accepts POST requests to `/confluence/execute` with the followi
 ```json
 {
   "base_url": "https://your-company.atlassian.net/wiki",
-  "auth_type": "basic|pat|oauth",
+  "auth_type": "basic|pat",
   "username": "your.email@company.com",  # For basic auth
   "api_token": "your_api_token",        # For basic auth
   "personal_token": "your_pat",          # For PAT auth
-  "oauth_token": "your_oauth_token",      # For OAuth
-  "cloud_id": "your_cloud_id",           # For OAuth
   "operation": "get_page|search_pages|get_space|list_spaces|create_page|update_page",
   "parameters": {
     "page_id": "12345",
@@ -172,7 +123,6 @@ The HTTP service accepts POST requests to `/confluence/execute` with the followi
 | `CONFLUENCE_PERSONAL_TOKEN` | Personal Access Token for Server/DC | ✅ (Server/DC) |
 | `CONFLUENCE_SPACES_FILTER` | Comma-separated space keys to filter | ❌ |
 | `CONFLUENCE_SSL_VERIFY` | Verify SSL certificates (true/false) | ❌ |
-| `CONFLUENCE_OAUTH_*` | OAuth configuration variables | ❌ |
 
 ### Command Line Options
 
