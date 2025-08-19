@@ -15,7 +15,7 @@ from mcp_atlassian.utils.lifecycle import (
 from mcp_atlassian.utils.logging import setup_logging
 
 try:
-    __version__ = version("mcp-confluence")
+    __version__ = version("confluence-mcp")
 except PackageNotFoundError:
     # package is not installed
     __version__ = "0.0.0"
@@ -32,7 +32,7 @@ logging_stream = sys.stdout if is_env_truthy("MCP_LOGGING_STDOUT") else sys.stde
 logger = setup_logging(logging_level, logging_stream)
 
 
-@click.version_option(__version__, prog_name="mcp-confluence")
+@click.version_option(__version__, prog_name="confluence-mcp")
 @click.command()
 @click.option(
     "-v",

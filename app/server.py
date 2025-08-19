@@ -18,12 +18,12 @@ from app.utils.logging import setup_logging
 
 def parse_args():
     """解析命令行参数"""
-    parser = argparse.ArgumentParser(description='TFA算法服务器')
+    parser = argparse.ArgumentParser(description='Confluence MCP服务器')
     parser.add_argument(
         '-name', 
         '--name',
-        default='tfa-algorithm-server',
-        help='服务器名称 (默认: tfa-algorithm-server)'
+        default='confluence-mcp',
+        help='服务器名称 (默认: confluence-mcp)'
     )
     parser.add_argument(
         '--host',

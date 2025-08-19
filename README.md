@@ -12,7 +12,7 @@ TFA算法服务器是一个基于FastAPI的HTTP服务器，提供Confluence集�
 
 ```bash
 # 使用模块方式启动（推荐）
-python3 -m app.server -name tfa-algorithm-server
+python3 -m app.server -name confluence-mcp
 
 # 或直接运行
 python3 app/server.py
@@ -25,7 +25,7 @@ python3 -m app.server -name my-server --host 127.0.0.1 --port 9000 --log-level D
 
 | 参数 | 描述 | 默认值 |
 |------|------|--------|
-| `-name, --name` | 服务器名称 | `tfa-algorithm-server` |
+| `-name, --name` | 服务器名称 | `confluence-mcp` |
 | `--host` | 服务器主机地址 | `0.0.0.0` |
 | `--port` | 服务器端口 | `8000` |
 | `--log-level` | 日志级别 | `INFO` |

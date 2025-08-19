@@ -49,17 +49,17 @@ mypy .
 ### Running the Server
 ```bash
 # Run with stdio transport (default)
-mcp-confluence
+confluence-mcp
 
 # Run with HTTP transport
-mcp-confluence --transport sse --port 9000
+confluence-mcp --transport sse --port 9000
 
 # Run with verbose logging
-mcp-confluence -vv
+confluence-mcp -vv
 
 
 # Run as HTTP service
-mcp-confluence --http-service --host 0.0.0.0 --port 8000
+confluence-mcp --http-service --host 0.0.0.0 --port 8000
 ```
 
 ## Architecture Overview

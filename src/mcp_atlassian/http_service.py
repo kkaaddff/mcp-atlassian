@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from mcp_atlassian.confluence import ConfluenceFetcher, ConfluenceConfig
 
-logger = logging.getLogger("mcp-confluence.http_service")
+logger = logging.getLogger("confluence-mcp.http_service")
 
 
 class ConfluenceAuthRequest(BaseModel):
@@ -28,7 +28,7 @@ class ConfluenceAuthService:
     """用于处理具有基于请求认证的 Confluence 操作的服务。"""
     
     def __init__(self):
-        self.logger = logging.getLogger("mcp-confluence.auth_service")
+        self.logger = logging.getLogger("confluence-mcp.auth_service")
     
     async def create_config_from_request(self, request: ConfluenceAuthRequest) -> ConfluenceConfig:
         """根据请求参数创建 ConfluenceConfig。"""

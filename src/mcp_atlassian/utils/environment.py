@@ -3,7 +3,7 @@
 import logging
 import os
 
-logger = logging.getLogger("mcp-confluence.utils.environment")
+logger = logging.getLogger("confluence-mcp.utils.environment")
 
 
 def get_available_services() -> dict[str, bool | None]:

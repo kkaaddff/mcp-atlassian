@@ -106,7 +106,7 @@ class ConfluenceConfig:
         Returns:
             bool: 如果身份验证完全配置则为True，否则为False。
         """
-        logger = logging.getLogger("mcp-confluence.confluence.config")
+        logger = logging.getLogger("confluence-mcp.confluence.config")
         if self.auth_type == "pat":
             return bool(self.personal_token)
         elif self.auth_type == "basic":

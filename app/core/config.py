@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """应用设置"""
     
     # 应用基本信息
-    app_name: str = Field(default="tfa-algorithm-server", description="应用名称")
+    app_name: str = Field(default="confluence-mcp", description="应用名称")
     version: str = Field(default="1.0.0", description="应用版本")
     debug: bool = Field(default=False, description="调试模式")
     
