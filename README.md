@@ -1,256 +1,312 @@
-# MCP Confluence
+# TFA算法服务器
 
-![PyPI Version](https://img.shields.io/pypi/v/mcp-confluence)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/mcp-confluence)
-![PePy - Total Downloads](https://static.pepy.tech/personalized-badge/mcp-confluence?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Total%20Downloads)
-[![Run Tests](https://github.com/sooperset/mcp-confluence/actions/workflows/tests.yml/badge.svg)](https://github.com/sooperset/mcp-confluence/actions/workflows/tests.yml)
-![License](https://img.shields.io/github/license/sooperset/mcp-confluence)
+![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)
+![FastAPI Version](https://img.shields.io/badge/FastAPI-0.115+-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-Confluence 的模型上下文协议 (MCP) 服务器。此集成支持 Confluence Server/Data Center 部署。
+TFA算法服务器是一个基于FastAPI的HTTP服务器，提供Confluence集成的RESTful API服务。此项目从原有的MCP（Model Context Protocol）架构重构而来，专注于提供简单、高效的HTTP API接口。
 
-## 使用示例
+## 🚀 快速开始
 
-向您的 AI 助手询问：
-
-- **🔍 AI 驱动的 Confluence 搜索** - "在 Confluence 中找到我们的 OKR 指南并总结它"
-- **📄 内容创建与管理** - "为 XYZ 功能创建技术设计文档"
-- **📚 空间管理** - "列出我们 Confluence 实例中的所有空间"
-- **🏷️ 页面组织** - "使用会议笔记更新项目文档"
-
-### 功能演示
-
-https://github.com/user-attachments/assets/7fe9c488-ad0c-4876-9b54-120b666bb785
-
-### 兼容性
-
-| 产品 | 部署类型 | 支持状态 |
-|------|----------|----------|
-| **Confluence** | Server/Data Center | ✅ 支持（版本 6.0+） |
-
-## 快速开始指南
-
-### 🔐 1. 身份验证设置
-
-MCP Confluence 支持以下身份验证方法：
-
-#### 个人访问令牌（Server/Data Center）
-
-1. 访问您的个人资料（头像）→ **个人资料** → **个人访问令牌**
-2. 点击 **创建令牌**，命名，设置过期时间
-3. 立即复制令牌
-
-### ⚙️ 2. 环境配置
-
-在项目根目录创建 `.env` 文件：
+### 启动服务器
 
 ```bash
-# Confluence Server/Data Center（个人访问令牌）
-CONFLUENCE_URL=https://confluence.your-company.com
-CONFLUENCE_PERSONAL_TOKEN=your_personal_access_token_here
+# 使用模块方式启动（推荐）
+python3 -m app.server -name tfa-algorithm-server
 
-# 可选：按特定空间过滤（逗号分隔）
-CONFLUENCE_SPACES_FILTER=DEV,TEAM,DOC
+# 或直接运行
+python3 app/server.py
+
+# 指定自定义参数
+python3 -m app.server -name my-server --host 127.0.0.1 --port 9000 --log-level DEBUG
 ```
 
-### 🚀 3. 运行服务器
+### 启动参数
 
-#### 标准 MCP 模式
-```bash
-# 使用 uv（推荐）
-uv run mcp-confluence
+| 参数 | 描述 | 默认值 |
+|------|------|--------|
+| `-name, --name` | 服务器名称 | `tfa-algorithm-server` |
+| `--host` | 服务器主机地址 | `0.0.0.0` |
+| `--port` | 服务器端口 | `8000` |
+| `--log-level` | 日志级别 | `INFO` |
+| `--reload` | 启用自动重载（开发模式） | `False` |
 
-# 使用 pip
-pip install mcp-confluence
-mcp-confluence
+## 📋 功能特性
+
+### 🔍 Confluence集成
+- **页面管理**: 获取、搜索页面内容
+- **空间管理**: 列出空间、获取用户空间
+- **内容搜索**: 支持CQL查询语言
+- **多格式支持**: HTML和Markdown格式转换
+
+### 🛡️ 安全特性
+- **多种认证方式**: Bearer Token、Personal Access Token
+- **中间件支持**: 认证、日志记录、CORS
+- **环境配置**: 支持.env文件配置
+
+### 🚀 技术特性
+- **FastAPI框架**: 高性能异步Web框架
+- **自动文档**: 内置Swagger UI和ReDoc
+- **类型安全**: 完整的类型注解和验证
+- **中间件架构**: 可扩展的中间件系统
+
+## 🏗️ 项目架构
+
+```
+app/
+├── __init__.py          # 应用包初始化
+├── __main__.py          # 模块启动入口
+├── server.py            # 主服务器入口
+├── core/                # 核心模块
+│   ├── __init__.py
+│   ├── config.py        # 配置管理
+│   └── application.py   # FastAPI应用创建
+├── api/                 # API路由
+│   ├── __init__.py
+│   └── confluence.py    # Confluence API
+├── services/            # 业务逻辑层
+│   ├── __init__.py
+│   └── confluence_service.py  # Confluence服务
+├── middleware/          # 中间件
+│   ├── __init__.py
+│   ├── auth.py          # 认证中间件
+│   └── logging.py       # 日志中间件
+└── utils/               # 工具模块
+    ├── __init__.py
+    └── logging.py       # 日志配置
 ```
 
-#### HTTP 服务模式
-用作具有可配置基础 URL 和基于请求认证的独立 HTTP 服务：
-
-```bash
-# 启动 HTTP 服务
-mcp-confluence --http-service --host 0.0.0.0 --port 8000
-
-# 服务将在以下地址可用：
-# - http://localhost:8000/confluence/execute - 执行操作
-# - http://localhost:8000/health - 健康检查
-```
-
-#### HTTP 服务 API
-HTTP 服务接受对 `/confluence/execute` 的 POST 请求，具有以下结构：
-
-```json
-{
-  "base_url": "https://confluence.your-company.com",
-  "auth_type": "basic|pat",
-  "username": "your.username",        # 基础认证用
-  "api_token": "your_api_token",      # 基础认证用
-  "personal_token": "your_pat",        # PAT 认证用
-  "operation": "get_page|search_pages|get_space|list_spaces|create_page|update_page",
-  "parameters": {
-    "page_id": "12345",
-    "query": "搜索词",
-    "space_key": "TEAM",
-    "limit": 50,
-    "title": "页面标题",
-    "content": "页面内容",
-    "parent_id": "123"
-  }
-}
-```
-
-## 配置选项
+## 🔧 配置
 
 ### 环境变量
 
-| 变量 | 描述 | 必需 |
-|------|------|------|
-| `CONFLUENCE_URL` | Confluence 实例的基础 URL | ✅ |
-| `CONFLUENCE_PERSONAL_TOKEN` | Server/Data Center 的个人访问令牌 | ✅ |
-| `CONFLUENCE_USERNAME` | 基础认证的用户名 | ❌ |
-| `CONFLUENCE_API_TOKEN` | 基础认证的 API 令牌 | ❌ |
-| `CONFLUENCE_SPACES_FILTER` | 用于过滤的逗号分隔空间键 | ❌ |
-| `CONFLUENCE_SSL_VERIFY` | 验证 SSL 证书（true/false） | ❌ |
-
-### 命令行选项
+创建 `.env` 文件在项目根目录：
 
 ```bash
-mcp-confluence [选项]
+# Confluence配置
+CONFLUENCE_URL=https://confluence.your-company.com
+CONFLUENCE_USERNAME=your.username
+CONFLUENCE_API_TOKEN=your_api_token
+CONFLUENCE_PERSONAL_TOKEN=your_personal_token
+CONFLUENCE_SSL_VERIFY=true
+CONFLUENCE_SPACES_FILTER=DEV,TEAM,DOC
 
-选项：
-  -v, --verbose                       增加详细程度
-  --env-file PATH                     .env 文件的路径
-  --confluence-url TEXT                Confluence URL
-  --confluence-username TEXT           Confluence 用户名/邮箱
-  --confluence-token TEXT              Confluence API 令牌
-  --confluence-personal-token TEXT     Confluence 个人访问令牌
-  --confluence-spaces-filter TEXT      空间过滤器
-  --read-only                         以只读模式运行
-  --transport [stdio|sse|streamable-http]  传输类型
-  --port INTEGER                       HTTP 传输的端口
-  --host TEXT                          HTTP 传输的主机
-  --http-service                       作为 HTTP 服务运行
-  --help                              显示帮助消息
+# 代理配置（可选）
+HTTP_PROXY=http://proxy.company.com:8080
+HTTPS_PROXY=https://proxy.company.com:8080
+NO_PROXY=localhost,127.0.0.1
+
+# 其他配置
+READ_ONLY_MODE=false
+ENABLED_TOOLS=search,spaces,pages
 ```
 
-## 可用操作
+### 配置说明
 
-### Confluence 操作
-- **搜索内容**：查找页面、博客和附件
-- **页面管理**：创建、读取、更新页面
-- **空间操作**：列出空间、获取空间详情
-- **评论**：添加和检索页面评论
-- **标签**：管理页面标签
-- **附件**：处理页面附件
-- **用户信息**：获取用户详情和权限
+| 变量 | 描述 | 必需 | 默认值 |
+|------|------|------|--------|
+| `CONFLUENCE_URL` | Confluence实例URL | ✅ | - |
+| `CONFLUENCE_USERNAME` | 用户名（基本认证） | ❌ | - |
+| `CONFLUENCE_API_TOKEN` | API令牌（基本认证） | ❌ | - |
+| `CONFLUENCE_PERSONAL_TOKEN` | 个人访问令牌 | ❌ | - |
+| `CONFLUENCE_SSL_VERIFY` | SSL验证 | ❌ | `true` |
+| `CONFLUENCE_SPACES_FILTER` | 空间过滤器 | ❌ | - |
 
-## 功能
+## 📚 API文档
 
-### 🔒 安全性
-- 多种身份验证方法
-- 令牌验证和刷新
-- SSL 证书验证
-- 基于请求的身份验证（HTTP 服务模式）
+### 基础端点
 
-### 🚀 性能
-- 连接池
-- 响应缓存
-- 高效数据模型
-- 批量操作支持
+- **健康检查**: `GET /health`
+- **API文档**: `GET /docs` (Swagger UI)
+- **ReDoc文档**: `GET /redoc`
 
-### 🛠️ 可扩展性
-- 工具过滤系统
-- 只读模式
-- 可配置的空间过滤器
-- 用于集成的 HTTP 服务模式
+### Confluence API
 
-## 开发
+#### 获取页面内容
+```http
+GET /api/v1/confluence/pages/{page_id}?convert_to_markdown=true
+Authorization: Bearer {token}
+```
 
-### 设置开发环境
+#### 搜索内容
+```http
+POST /api/v1/confluence/search
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "cql": "type=page AND space=TEAM",
+  "limit": 10,
+  "spaces_filter": "DEV,TEAM"
+}
+```
+
+#### 获取空间列表
+```http
+GET /api/v1/confluence/spaces?start=0&limit=10
+Authorization: Bearer {token}
+```
+
+#### 获取用户空间
+```http
+GET /api/v1/confluence/spaces/user?limit=250
+Authorization: Bearer {token}
+```
+
+### 认证方式
+
+#### Bearer Token
+```http
+Authorization: Bearer your_api_token_here
+```
+
+#### Personal Access Token
+```http
+Authorization: Token your_personal_token_here
+```
+
+## 🚀 开发指南
+
+### 环境设置
+
 ```bash
-# 克隆仓库
-git clone https://github.com/sooperset/mcp-confluence.git
-cd mcp-confluence
+# 克隆项目
+git clone <repository-url>
+cd mcp-atlassian
+
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或
+venv\Scripts\activate     # Windows
 
 # 安装依赖
-uv sync
+pip install -r requirements.txt
 
-# 设置预提交钩子
-pre-commit install
-
-# 复制环境模板
-cp .env.example .env
+# 开发依赖
+pip install -r requirements-dev.txt
 ```
 
-### 运行测试
+### 运行开发服务器
+
+```bash
+# 启用自动重载
+python3 -m app.server --reload --log-level DEBUG
+
+# 指定端口和主机
+python3 -m app.server --host 127.0.0.1 --port 9000 --reload
+```
+
+### 测试
+
 ```bash
 # 运行所有测试
-uv run pytest
+pytest
 
-# 运行覆盖率测试
-uv run pytest --cov=mcp_confluence
+# 运行特定测试
+pytest tests/unit/
 
-# 运行特定测试文件
-uv run pytest tests/unit/confluence/test_client.py
-
-# 使用详细输出运行
-uv run pytest -v
+# 覆盖率测试
+pytest --cov=app
 ```
 
 ### 代码质量
-```bash
-# 运行所有预提交检查
-pre-commit run --all-files
 
-# 运行特定工具
-uv run ruff check .
-uv run ruff format .
-uv run mypy .
+```bash
+# 代码格式化
+black app/
+isort app/
+
+# 代码检查
+flake8 app/
+mypy app/
 ```
 
-## 故障排除
+## 🔍 故障排除
 
 ### 常见问题
 
-1. **身份验证失败**
-   - 验证您的个人访问令牌是否有效且未过期
-   - 检查您的 Confluence URL 是否正确
-   - 确保您的用户/令牌具有适当的权限
+1. **模块导入错误**
+   - 确保在虚拟环境中运行
+   - 检查依赖是否正确安装
 
-2. **SSL 证书问题**
-   - 对于自签名证书，设置 `CONFLUENCE_SSL_VERIFY=false`
-   - 确保您的证书链完整
+2. **Confluence连接失败**
+   - 验证URL和认证信息
+   - 检查网络连接和代理设置
+   - 确认SSL证书配置
 
-3. **权限被拒绝**
-   - 验证您的用户在 Confluence 中具有必要权限
-   - 检查空间和页面级权限
-
-4. **HTTP 服务问题**
-   - 确保提供了所有必需的身份验证参数
-   - 检查基础 URL 是否可访问
-   - 验证操作和参数是否正确
+3. **权限问题**
+   - 验证用户权限
+   - 检查空间访问权限
 
 ### 调试模式
-启用详细日志记录来排查问题：
 
 ```bash
-mcp-confluence -vv --env-file .env
+# 启用详细日志
+python3 -m app.server --log-level DEBUG
+
+# 查看日志输出
+tail -f logs/app.log
 ```
 
-## 贡献
+## 📦 部署
 
-我们欢迎贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
+### Docker部署
 
-## 许可证
+```dockerfile
+FROM python:3.11-slim
 
-此项目根据 MIT 许可证授权 - 详情请参见 [LICENSE](LICENSE) 文件。
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-## 支持
+COPY . .
+EXPOSE 8000
 
-- 📚 [文档](https://github.com/sooperset/mcp-confluence/wiki)
-- 🐛 [报告问题](https://github.com/sooperset/mcp-confluence/issues)
-- 💬 [讨论](https://github.com/sooperset/mcp-confluence/discussions)
+CMD ["python3", "-m", "app.server", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### 系统服务
+
+创建systemd服务文件：
+
+```ini
+[Unit]
+Description=TFA Algorithm Server
+After=network.target
+
+[Service]
+Type=simple
+User=app
+WorkingDirectory=/opt/tfa-server
+Environment=PATH=/opt/tfa-server/venv/bin
+ExecStart=/opt/tfa-server/venv/bin/python -m app.server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## 🤝 贡献
+
+欢迎贡献！请遵循以下步骤：
+
+1. Fork项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开Pull Request
+
+## 📄 许可证
+
+本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🆘 支持
+
+- 📚 [API文档](http://localhost:8000/docs)
+- 🐛 [报告问题](https://github.com/your-repo/issues)
+- 💬 [讨论](https://github.com/your-repo/discussions)
 
 ---
 
-**为 Confluence 社区用 ❤️ 构建**
+**为TFA算法社区用 ❤️ 构建**
