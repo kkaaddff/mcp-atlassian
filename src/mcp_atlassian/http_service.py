@@ -1,9 +1,9 @@
 """Confluence 的 HTTP 服务包装器，具有可配置的基础 URL 和基于请求的认证。"""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -16,10 +16,8 @@ class ConfluenceAuthRequest(BaseModel):
     """具有认证的 Confluence 操作的请求模型。"""
     
     base_url: str = Field(..., description="Confluence 实例的基础 URL")
-    auth_type: str = Field(..., description="认证类型：'basic' 或 'pat'")
-    username: Optional[str] = Field(None, description="基础认证的用户名")
-    api_token: Optional[str] = Field(None, description="基础认证的 API 令牌")
-    personal_token: Optional[str] = Field(None, description="Server/DC 的个人访问令牌")
+    username: str = Field(..., description="基础认证的用户名")
+    api_token: str = Field(..., description="基础认证的 API 令牌")
     operation: str = Field(..., description="要执行的操作")
     parameters: Dict[str, Any] = Field(default_factory=dict, description="操作的参数")
 
@@ -33,28 +31,14 @@ class ConfluenceAuthService:
     async def create_config_from_request(self, request: ConfluenceAuthRequest) -> ConfluenceConfig:
         """根据请求参数创建 ConfluenceConfig。"""
         
-        
-        if request.auth_type == "basic":
-            if not request.username or not request.api_token:
-                raise HTTPException(status_code=400, detail="基础认证需要用户名和 API 令牌")
-        
-        elif request.auth_type == "pat":
-            if not request.personal_token:
-                raise HTTPException(status_code=400, detail="PAT 认证需要个人令牌")
-        
-        elif request.auth_type == "pat":
-            if not request.personal_token:
-                raise HTTPException(status_code=400, detail="PAT 认证需要个人令牌")
-        else:
-            raise HTTPException(status_code=400, detail=f"不支持的认证类型：{request.auth_type}")
+        if not request.username or not request.api_token:
+            raise HTTPException(status_code=400, detail="基础认证需要用户名和 API 令牌")
         
         # 创建 ConfluenceConfig
         config = ConfluenceConfig(
             url=request.base_url,
-            auth_type=request.auth_type,
             username=request.username,
             api_token=request.api_token,
-            personal_token=request.personal_token,
             ssl_verify=True,  # 默认 SSL 验证
         )
         

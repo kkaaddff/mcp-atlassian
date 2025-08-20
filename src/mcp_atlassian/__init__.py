@@ -107,7 +107,6 @@ def main(
     confluence_url: str | None,
     confluence_username: str | None,
     confluence_token: str | None,
-    confluence_personal_token: str | None,
     confluence_ssl_verify: bool,
     confluence_spaces_filter: str | None,
     read_only: bool,
@@ -222,8 +221,6 @@ def main(
         os.environ["CONFLUENCE_USERNAME"] = confluence_username
     if click_ctx and was_option_provided(click_ctx, "confluence_token"):
         os.environ["CONFLUENCE_API_TOKEN"] = confluence_token
-    if click_ctx and was_option_provided(click_ctx, "confluence_personal_token"):
-        os.environ["CONFLUENCE_PERSONAL_TOKEN"] = confluence_personal_token
     if click_ctx and was_option_provided(click_ctx, "read_only"):
         os.environ["READ_ONLY_MODE"] = str(read_only).lower()
     if click_ctx and was_option_provided(click_ctx, "confluence_ssl_verify"):

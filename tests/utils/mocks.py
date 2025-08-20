@@ -27,18 +27,7 @@ class MockEnvironment:
         with patch.dict(os.environ, env_vars, clear=False):
             yield env_vars
 
-    @staticmethod
-    @contextmanager
-    def pat_env():
-        """Context manager for PAT environment variables."""
-        auth_config = AuthConfigFactory.create_pat_auth_config()
-        env_vars = {
-            "CONFLUENCE_URL": auth_config["url"],
-            "CONFLUENCE_PERSONAL_TOKEN": auth_config["personal_token"],
-        }
-        with patch.dict(os.environ, env_vars, clear=False):
-            yield env_vars
-
+  
     @staticmethod
     @contextmanager
     def clean_env():
@@ -50,7 +39,6 @@ class MockEnvironment:
             "CONFLUENCE_URL",
             "CONFLUENCE_USERNAME",
             "CONFLUENCE_API_TOKEN",
-            "CONFLUENCE_PERSONAL_TOKEN",
         ]
 
         # Remove auth vars from environment

@@ -13,7 +13,6 @@ def test_init_with_basic_auth():
     # 准备
     config = ConfluenceConfig(
         url="https://test.atlassian.net/wiki",
-        auth_type="basic",
         username="test_user",
         api_token="test_token",
     )
@@ -36,7 +35,6 @@ def test_init_with_basic_auth():
             url="https://test.atlassian.net/wiki",
             username="test_user",
             password="test_token",
-            cloud=True,
             verify_ssl=True,
         )
         assert client.config == config
@@ -52,47 +50,6 @@ def test_init_with_basic_auth():
         )
 
 
-def test_init_with_token_auth():
-    """测试使用令牌身份验证配置初始化客户端。"""
-    # 准备
-    config = ConfluenceConfig(
-        url="https://confluence.example.com",
-        auth_type="pat",
-        personal_token="test_personal_token",
-        ssl_verify=False,
-    )
-
-    # 模拟 Confluence 类、ConfluencePreprocessor 和 configure_ssl_verification
-    with (
-        patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence,
-        patch(
-            "mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor"
-        ) as mock_preprocessor,
-        patch(
-            "mcp_atlassian.confluence.client.configure_ssl_verification"
-        ) as mock_configure_ssl,
-    ):
-        # 执行
-        client = ConfluenceClient(config=config)
-
-        # 断言
-        mock_confluence.assert_called_once_with(
-            url="https://confluence.example.com",
-            token="test_personal_token",
-            cloud=False,
-            verify_ssl=False,
-        )
-        assert client.config == config
-        assert client.confluence == mock_confluence.return_value
-        assert client.preprocessor == mock_preprocessor.return_value
-
-        # Verify SSL verification was configured with ssl_verify=False
-        mock_configure_ssl.assert_called_once_with(
-            service_name="Confluence",
-            url="https://confluence.example.com",
-            session=mock_confluence.return_value._session,
-            ssl_verify=False,
-        )
 
 
 def test_init_from_env():
@@ -218,7 +175,6 @@ def test_init_sets_proxies_and_no_proxy(monkeypatch):
 
     config = ConfluenceConfig(
         url="https://test.atlassian.net/wiki",
-        auth_type="basic",
         username="user",
         api_token="token",
         http_proxy="http://proxy:8080",
@@ -254,7 +210,6 @@ def test_init_no_proxies(monkeypatch):
 
     config = ConfluenceConfig(
         url="https://test.atlassian.net/wiki",
-        auth_type="basic",
         username="user",
         api_token="token",
     )

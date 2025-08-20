@@ -54,7 +54,7 @@ def test_from_env_missing_server_auth():
     ):
         with pytest.raises(
             ValueError,
-            match="Server/Data Center身份验证需要CONFLUENCE_PERSONAL_TOKEN或CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN",
+            match="Basic Auth需要CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN",
         ):
             ConfluenceConfig.from_env()
 

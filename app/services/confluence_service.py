@@ -10,7 +10,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
-from mcp_atlassian.confluence.client import ConfluenceClient
 from mcp_atlassian.confluence.config import ConfluenceConfig
 from mcp_atlassian.confluence.pages import PagesMixin
 from mcp_atlassian.confluence.search import SearchMixin
@@ -78,26 +77,19 @@ class ConfluenceService(PagesMixin, SearchMixin, SpacesMixin):
             )
         
         try:
-            if auth_type == "pat":
-                config = ConfluenceConfig(
-                    url=confluence_url,
-                    personal_token=confluence_token,
-                    ssl_verify=ssl_verify,
-                    spaces_filter=spaces_filter
+            # 只支持 Basic Auth
+            if not confluence_username:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Basic Auth需要用户名"
                 )
-            else:  # basic
-                if not confluence_username:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="基本认证需要用户名"
-                    )
-                config = ConfluenceConfig(
-                    url=confluence_url,
-                    username=confluence_username,
-                    api_token=confluence_token,
-                    ssl_verify=ssl_verify,
-                    spaces_filter=spaces_filter
-                )
+            config = ConfluenceConfig(
+                url=confluence_url,
+                username=confluence_username,
+                api_token=confluence_token,
+                ssl_verify=ssl_verify,
+                spaces_filter=spaces_filter
+            )
             
             return cls(config)
             

@@ -4,10 +4,9 @@ import logging
 import os
 
 from atlassian import Confluence
-from requests import Session
 
 from ..exceptions import MCPAtlassianAuthenticationError
-from ..utils.logging import get_masked_session_headers, log_config_param, mask_sensitive
+from ..utils.logging import get_masked_session_headers, log_config_param
 from ..utils.ssl import configure_ssl_verification
 from .config import ConfluenceConfig
 
@@ -29,36 +28,24 @@ class ConfluenceClient:
         """
         self.config = config or ConfluenceConfig.from_env()
 
-        # 根据身份验证类型初始化Confluence客户端
-        if self.config.auth_type == "pat":
-            logger.debug(
-                f"使用令牌（PAT）身份验证初始化Confluence客户端。"
-                f"URL: {self.config.url}, "
-                f"令牌（已遮蔽）: {mask_sensitive(str(self.config.personal_token))}"
-            )
-            self.confluence = Confluence(
-                url=self.config.url,
-                token=self.config.personal_token,
-                verify_ssl=self.config.ssl_verify,
-            )
-        else:  # 基本身份验证
-            logger.debug(
-                f"使用基本身份验证初始化Confluence客户端。"
-                f"URL: {self.config.url}, 用户名: {self.config.username}, "
-                f"API令牌存在: {bool(self.config.api_token)}, "
-                "使用Server/Data Center身份验证"
-            )
-            self.confluence = Confluence(
-                url=self.config.url,
-                username=self.config.username,
-                password=self.config.api_token,  # API令牌用作密码
-                verify_ssl=self.config.ssl_verify,
-            )
-            logger.debug(
-                f"Confluence客户端已初始化。"
-                f"会话头（Authorization已遮蔽）: "
-                f"{get_masked_session_headers(dict(self.confluence._session.headers))}"
-            )
+        logger.debug(
+            f"使用基本身份验证初始化Confluence客户端。"
+            f"URL: {self.config.url}, 用户名: {self.config.username}, "
+            f"API令牌存在: {bool(self.config.api_token)}, "
+            "使用Server/Data Center身份验证"
+        )
+        self.confluence = Confluence(
+            url=self.config.url,
+            username=self.config.username,
+            password=self.config.api_token,  # API令牌用作密码
+            verify_ssl=self.config.ssl_verify,
+        )
+        
+        logger.debug(
+            f"Confluence客户端已初始化。"
+            f"会话头（Authorization已遮蔽）: "
+            f"{get_masked_session_headers(dict(self.confluence._session.headers))}"
+        )
 
         # 使用共享工具配置SSL验证
         configure_ssl_verification(

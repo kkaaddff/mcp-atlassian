@@ -1,9 +1,7 @@
 """Confluence客户端的配置模块。"""
 
-import logging
 import os
 from dataclasses import dataclass
-from typing import Literal
 
 from ..utils.env import get_custom_headers, is_env_ssl_verify
 
@@ -12,15 +10,12 @@ from ..utils.env import get_custom_headers, is_env_ssl_verify
 class ConfluenceConfig:
     """Confluence API配置。
 
-    处理Confluence Server/Data Center的身份验证：
-    - Server/DC：个人访问令牌或基本身份验证
+    处理Confluence Basic Auth身份验证。
     """
 
     url: str  # Confluence的基础URL
-    auth_type: Literal["basic", "pat"]  # 身份验证类型
-    username: str | None = None  # 邮箱或用户名
-    api_token: str | None = None  # 用作密码的API令牌
-    personal_token: str | None = None  # 个人访问令牌（Server/DC）
+    username: str  # 邮箱或用户名
+    api_token: str  # 用作密码的API令牌
     ssl_verify: bool = True  # 是否验证SSL证书
     spaces_filter: str | None = None  # 用于过滤搜索的空间键列表
     http_proxy: str | None = None  # HTTP代理URL
@@ -54,20 +49,12 @@ class ConfluenceConfig:
             error_msg = "缺少必需的CONFLUENCE_URL环境变量"
             raise ValueError(error_msg)
 
-        # 根据可用的环境变量确定身份验证类型
+        # 只支持 Basic Auth
         username = os.getenv("CONFLUENCE_USERNAME")
         api_token = os.getenv("CONFLUENCE_API_TOKEN")
-        personal_token = os.getenv("CONFLUENCE_PERSONAL_TOKEN")
 
-        auth_type = None
-
-        if personal_token:
-            auth_type = "pat"
-        elif username and api_token:
-            # 基本身份验证
-            auth_type = "basic"
-        else:
-            error_msg = "Server/Data Center身份验证需要CONFLUENCE_PERSONAL_TOKEN或CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN"
+        if not (username and api_token):
+            error_msg = "Basic Auth需要CONFLUENCE_USERNAME和CONFLUENCE_API_TOKEN"
             raise ValueError(error_msg)
 
         # SSL验证（用于Server/DC）
@@ -87,10 +74,8 @@ class ConfluenceConfig:
 
         return cls(
             url=url,
-            auth_type=auth_type,
             username=username,
             api_token=api_token,
-            personal_token=personal_token,
             ssl_verify=ssl_verify,
             spaces_filter=spaces_filter,
             http_proxy=http_proxy,
@@ -106,12 +91,4 @@ class ConfluenceConfig:
         Returns:
             bool: 如果身份验证完全配置则为True，否则为False。
         """
-        logger = logging.getLogger("confluence-mcp.confluence.config")
-        if self.auth_type == "pat":
-            return bool(self.personal_token)
-        elif self.auth_type == "basic":
-            return bool(self.username and self.api_token)
-        logger.warning(
-            f"ConfluenceConfig中未知或不受支持的auth_type: {self.auth_type}"
-        )
-        return False
+        return bool(self.username and self.api_token)

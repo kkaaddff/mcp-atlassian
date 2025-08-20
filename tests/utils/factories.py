@@ -75,15 +75,7 @@ class AuthConfigFactory:
         }
         return {**defaults, **overrides}
 
-    @staticmethod
-    def create_pat_auth_config(**overrides) -> dict[str, str]:
-        """Create PAT auth configuration."""
-        defaults = {
-            "url": "https://confluence.example.com",
-            "personal_token": "test-pat-token",
-        }
-        return {**defaults, **overrides}
-
+  
 
 class ErrorResponseFactory:
     """Factory for creating error response test data."""

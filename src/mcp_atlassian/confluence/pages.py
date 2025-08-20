@@ -2,7 +2,6 @@
 
 import logging
 
-import requests
 from requests.exceptions import HTTPError
 
 from ..exceptions import MCPAtlassianAuthenticationError

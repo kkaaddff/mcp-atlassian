@@ -1,6 +1,5 @@
 """应用配置模块"""
 
-import os
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
@@ -24,7 +23,6 @@ class Settings(BaseSettings):
     confluence_url: Optional[str] = Field(default=None, env="CONFLUENCE_URL", description="Confluence URL")
     confluence_username: Optional[str] = Field(default=None, env="CONFLUENCE_USERNAME", description="Confluence用户名")
     confluence_api_token: Optional[str] = Field(default=None, env="CONFLUENCE_API_TOKEN", description="Confluence API令牌")
-    confluence_personal_token: Optional[str] = Field(default=None, env="CONFLUENCE_PERSONAL_TOKEN", description="Confluence个人访问令牌")
     confluence_ssl_verify: bool = Field(default=True, env="CONFLUENCE_SSL_VERIFY", description="SSL验证")
     confluence_spaces_filter: Optional[str] = Field(default=None, env="CONFLUENCE_SPACES_FILTER", description="空间过滤器")
     
