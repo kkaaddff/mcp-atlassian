@@ -7,7 +7,6 @@ from atlassian import Confluence
 
 from ..exceptions import MCPAtlassianAuthenticationError
 from ..utils.logging import get_masked_session_headers, log_config_param
-from ..utils.ssl import configure_ssl_verification
 from .config import ConfluenceConfig
 
 # 配置日志记录
@@ -38,7 +37,7 @@ class ConfluenceClient:
             url=self.config.url,
             username=self.config.username,
             password=self.config.api_token,  # API令牌用作密码
-            verify_ssl=self.config.ssl_verify,
+            verify_ssl=True,
         )
         
         logger.debug(
@@ -47,36 +46,7 @@ class ConfluenceClient:
             f"{get_masked_session_headers(dict(self.confluence._session.headers))}"
         )
 
-        # 使用共享工具配置SSL验证
-        configure_ssl_verification(
-            service_name="Confluence",
-            url=self.config.url,
-            session=self.confluence._session,
-            ssl_verify=self.config.ssl_verify,
-        )
-
-        # 代理配置
-        proxies = {}
-        if self.config.http_proxy:
-            proxies["http"] = self.config.http_proxy
-        if self.config.https_proxy:
-            proxies["https"] = self.config.https_proxy
-        if self.config.socks_proxy:
-            proxies["socks"] = self.config.socks_proxy
-        if proxies:
-            self.confluence._session.proxies.update(proxies)
-            for k, v in proxies.items():
-                log_config_param(
-                    logger, "Confluence", f"{k.upper()}_PROXY", v, sensitive=True
-                )
-        if self.config.no_proxy and isinstance(self.config.no_proxy, str):
-            os.environ["NO_PROXY"] = self.config.no_proxy
-            log_config_param(logger, "Confluence", "NO_PROXY", self.config.no_proxy)
-
-        # 如果配置了自定义头，则应用它们
-        if self.config.custom_headers:
-            self._apply_custom_headers()
-
+  
         # 在此处导入以避免循环导入
         from ..preprocessing.confluence import ConfluencePreprocessor
 
@@ -119,18 +89,7 @@ class ConfluenceClient:
             )
             raise MCPAtlassianAuthenticationError(error_msg) from e
 
-    def _apply_custom_headers(self) -> None:
-        """将自定义头应用到Confluence会话。"""
-        if not self.config.custom_headers:
-            return
-
-        logger.debug(
-            f"正在将{len(self.config.custom_headers)}个自定义头应用到Confluence会话"
-        )
-        for header_name, header_value in self.config.custom_headers.items():
-            self.confluence._session.headers[header_name] = header_value
-            logger.debug(f"Applied custom header: {header_name}")
-
+  
     def _process_html_content(
         self, html_content: str, space_key: str
     ) -> tuple[str, str]:

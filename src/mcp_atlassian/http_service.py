@@ -39,7 +39,6 @@ class ConfluenceAuthService:
             url=request.base_url,
             username=request.username,
             api_token=request.api_token,
-            ssl_verify=True,  # 默认 SSL 验证
         )
         
         # 验证配置

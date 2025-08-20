@@ -20,7 +20,7 @@ class SearchMixin(ConfluenceClient):
 
     @handle_atlassian_api_errors("Confluence API")
     def search(
-        self, cql: str, limit: int = 10, spaces_filter: str | None = None
+        self, cql: str, limit: int = 10
     ) -> list[ConfluencePage]:
         """
         使用Confluence查询语言（CQL）搜索内容。
@@ -28,8 +28,6 @@ class SearchMixin(ConfluenceClient):
         Args:
             cql: Confluence查询语言字符串
             limit: 要返回的最大结果数
-            spaces_filter: 可选的用于过滤的空间键逗号分隔列表，
-                覆盖配置
 
         Returns:
             包含搜索结果的ConfluencePage模型列表
@@ -38,27 +36,7 @@ class SearchMixin(ConfluenceClient):
             MCPAtlassianAuthenticationError: 如果Confluence API身份验证失败
                 （401/403）
         """
-        # 如果提供了spaces_filter参数，则使用它，否则回退到配置
-        filter_to_use = spaces_filter or self.config.spaces_filter
-
-        # 如果存在空间过滤器，则应用它
-        if filter_to_use:
-            # 按逗号分割空间过滤器并处理可能的空白
-            spaces = [s.strip() for s in filter_to_use.split(",")]
-
-            # 使用适当的引用为每个空间键构建空间过滤器查询部分
-            space_query = " OR ".join(
-                [f"space = {quote_cql_identifier_if_needed(space)}" for space in spaces]
-            )
-
-            # 使用括号将空间过滤器添加到现有查询中
-            if cql and space_query:
-                if "space = " not in cql:  # 仅在尚未按空间过滤时添加
-                    cql = f"({cql}) AND ({space_query})"
-            else:
-                cql = space_query
-
-            logger.info(f"将空间过滤器应用于查询: {cql}")
+        # No spaces filter functionality - search all spaces
 
         # 执行CQL搜索查询
         results = self.confluence.cql(cql=cql, limit=limit)

@@ -17,15 +17,12 @@ def test_init_with_basic_auth():
         api_token="test_token",
     )
 
-    # 模拟 Confluence 类、ConfluencePreprocessor 和 configure_ssl_verification
+    # 模拟 Confluence 类和 ConfluencePreprocessor
     with (
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence,
         patch(
             "mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor"
         ) as mock_preprocessor,
-        patch(
-            "mcp_atlassian.confluence.client.configure_ssl_verification"
-        ) as mock_configure_ssl,
     ):
         # 执行
         client = ConfluenceClient(config=config)
@@ -41,14 +38,6 @@ def test_init_with_basic_auth():
         assert client.confluence == mock_confluence.return_value
         assert client.preprocessor == mock_preprocessor.return_value
 
-        # Verify SSL verification was configured
-        mock_configure_ssl.assert_called_once_with(
-            service_name="Confluence",
-            url="https://test.atlassian.net/wiki",
-            session=mock_confluence.return_value._session,
-            ssl_verify=True,
-        )
-
 
 
 
@@ -61,7 +50,6 @@ def test_init_from_env():
         ) as mock_from_env,
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence,
         patch("mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor"),
-        patch("mcp_atlassian.confluence.client.configure_ssl_verification"),
     ):
         mock_config = MagicMock()
         mock_from_env.return_value = mock_config
@@ -83,7 +71,6 @@ def test_process_html_content():
         patch(
             "mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor"
         ) as mock_preprocessor_class,
-        patch("mcp_atlassian.confluence.client.configure_ssl_verification"),
     ):
         mock_preprocessor = mock_preprocessor_class.return_value
         mock_preprocessor.process_html_content.return_value = (
@@ -111,7 +98,6 @@ def test_get_user_details_by_accountid():
         patch("mcp_atlassian.confluence.client.ConfluenceConfig.from_env"),
         patch("mcp_atlassian.confluence.client.Confluence") as mock_confluence_class,
         patch("mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor"),
-        patch("mcp_atlassian.confluence.client.configure_ssl_verification"),
     ):
         mock_confluence = mock_confluence_class.return_value
         mock_confluence.get_user_details_by_accountid.return_value = {
@@ -151,67 +137,3 @@ def test_get_user_details_by_accountid():
         assert user_details["status"] == "active"
 
 
-def test_init_sets_proxies_and_no_proxy(monkeypatch):
-    """Test that ConfluenceClient sets session proxies and NO_PROXY env var from config."""
-    # Patch Confluence and its _session
-    mock_confluence = MagicMock()
-    mock_session = MagicMock()
-    mock_session.proxies = {}  # Use a real dict for proxies
-    mock_confluence._session = mock_session
-    monkeypatch.setattr(
-        "mcp_atlassian.confluence.client.Confluence", lambda **kwargs: mock_confluence
-    )
-    monkeypatch.setattr(
-        "mcp_atlassian.confluence.client.configure_ssl_verification",
-        lambda **kwargs: None,
-    )
-    monkeypatch.setattr(
-        "mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor",
-        lambda **kwargs: MagicMock(),
-    )
-
-    # Patch environment
-    monkeypatch.setenv("NO_PROXY", "")
-
-    config = ConfluenceConfig(
-        url="https://test.atlassian.net/wiki",
-        username="user",
-        api_token="token",
-        http_proxy="http://proxy:8080",
-        https_proxy="https://proxy:8443",
-        socks_proxy="socks5://user:pass@proxy:1080",
-        no_proxy="localhost,127.0.0.1",
-    )
-    client = ConfluenceClient(config=config)
-    assert mock_session.proxies["http"] == "http://proxy:8080"
-    assert mock_session.proxies["https"] == "https://proxy:8443"
-    assert mock_session.proxies["socks"] == "socks5://user:pass@proxy:1080"
-    assert os.environ["NO_PROXY"] == "localhost,127.0.0.1"
-
-
-def test_init_no_proxies(monkeypatch):
-    """Test that ConfluenceClient does not set proxies if not configured."""
-    # Patch Confluence and its _session
-    mock_confluence = MagicMock()
-    mock_session = MagicMock()
-    mock_session.proxies = {}  # Use a real dict for proxies
-    mock_confluence._session = mock_session
-    monkeypatch.setattr(
-        "mcp_atlassian.confluence.client.Confluence", lambda **kwargs: mock_confluence
-    )
-    monkeypatch.setattr(
-        "mcp_atlassian.confluence.client.configure_ssl_verification",
-        lambda **kwargs: None,
-    )
-    monkeypatch.setattr(
-        "mcp_atlassian.preprocessing.confluence.ConfluencePreprocessor",
-        lambda **kwargs: MagicMock(),
-    )
-
-    config = ConfluenceConfig(
-        url="https://test.atlassian.net/wiki",
-        username="user",
-        api_token="token",
-    )
-    client = ConfluenceClient(config=config)
-    assert mock_session.proxies == {}

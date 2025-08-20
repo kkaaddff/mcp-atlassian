@@ -52,16 +52,4 @@ class TestLogConfigParam:
         )
         mock_logger.info.assert_called_once_with("Jira API Token: abcd********mnop")
 
-    def test_log_config_param_masks_proxy_url(self, caplog):
-        """Test that log_config_param masks credentials in proxy URLs when sensitive=True."""
-        logger = logging.getLogger("test-proxy-logger")
-        proxy_url = "socks5://user:pass@proxy.example.com:1080"
-        with caplog.at_level(logging.INFO, logger="test-proxy-logger"):
-            log_config_param(logger, "Jira", "SOCKS_PROXY", proxy_url, sensitive=True)
-        # Should mask the middle part of the URL, not show user:pass
-        assert any(
-            rec.message.startswith("Jira SOCKS_PROXY: sock")
-            and rec.message.endswith("1080")
-            and "user:pass" not in rec.message
-            for rec in caplog.records
-        )
+    
